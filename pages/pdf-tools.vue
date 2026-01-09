@@ -117,6 +117,12 @@ const handleClickUpload = () => {
   }
 }
 
+useSeoMeta({
+  title: 'PDF 合并工具 - 免费在线合并 PDF 文件 - LocalTools',
+  description: '专业的 PDF 合并工具，支持拖拽排序，快速将多个 PDF 文件合并为一个。所有处理均在本地浏览器完成，确保文档安全。',
+  keywords: 'PDF合并, PDF拼接, 合并PDF, 本地PDF工具, 免费PDF工具'
+})
+
 // 格式化文件大小
 const formatFileSize = (bytes) => {
   if (bytes === 0) return '0 Bytes'

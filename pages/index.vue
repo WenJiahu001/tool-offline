@@ -1,3 +1,11 @@
+<script setup>
+useSeoMeta({
+  title: 'LocalTools - 免费且安全的在线图片处理与PDF工具箱',
+  description: '您的随身本地工具箱，提供图片压缩、PDF合并、图片转PDF等实用功能。纯浏览器运行，数据无需上传服务器，安全、快速、免费。',
+  keywords: '在线工具, 本地工具, 图片压缩, PDF合并, 图片转PDF, 免费工具, 数据安全'
+})
+</script>
+
 <template>
   <div class="p-8 sm:p-12">
     <div class="max-w-6xl mx-auto">
@@ -15,7 +23,7 @@
       <!-- 工具网格 -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         <!-- 图片压缩工具 -->
-        <router-link 
+        <NuxtLink 
           to="/image-compress" 
           class="group relative bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl border border-gray-100 transition-all duration-300 flex flex-col items-start overflow-hidden active:scale-95"
         >
@@ -32,10 +40,10 @@
           <div class="mt-auto pt-6 flex items-center text-blue-600 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
             立即开始 <span class="ml-1">&rarr;</span>
           </div>
-        </router-link>
+        </NuxtLink>
         
         <!-- PDF 合并 -->
-        <router-link 
+        <NuxtLink 
           to="/pdf-tools" 
           class="group relative bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl border border-gray-100 transition-all duration-300 flex flex-col items-start overflow-hidden active:scale-95"
         >
@@ -52,10 +60,10 @@
           <div class="mt-auto pt-6 flex items-center text-purple-600 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
             立即开始 <span class="ml-1">&rarr;</span>
           </div>
-        </router-link>
+        </NuxtLink>
 
         <!-- 图片合并 PDF -->
-        <router-link 
+        <NuxtLink 
           to="/image-to-pdf" 
           class="group relative bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl border border-gray-100 transition-all duration-300 flex flex-col items-start overflow-hidden active:scale-95"
         >
@@ -72,7 +80,7 @@
           <div class="mt-auto pt-6 flex items-center text-emerald-600 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
             立即开始 <span class="ml-1">&rarr;</span>
           </div>
-        </router-link>
+        </NuxtLink>
       </div>
 
       <!-- 底部版权 -->

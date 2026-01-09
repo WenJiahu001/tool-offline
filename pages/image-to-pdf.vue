@@ -122,6 +122,12 @@ const handleClickUpload = () => {
   }
 }
 
+useSeoMeta({
+  title: '图片转 PDF - 免费在线图片合并 PDF - LocalTools',
+  description: '将 JPG、PNG 等多种格式图片批量转换为 PDF 文档。支持自定义排序，保留高清画质，完全本地运行，保护隐私。',
+  keywords: '图片转PDF, JPG转PDF, PNG转PDF, 图片合并PDF, 本地工具, 免费转换'
+})
+
 // 创建图片 URL
 const createImageUrl = (file) => {
   if (!file) return ''

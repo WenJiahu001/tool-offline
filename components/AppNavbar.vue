@@ -7,12 +7,12 @@ const route = useRoute()
   <header class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 transition-all duration-300">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <!-- Logo -->
-      <router-link to="/" class="flex items-center gap-2 group">
+      <NuxtLink to="/" class="flex items-center gap-2 group">
         <div class="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105">
           Logo
         </div>
         <span class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700">LocalTools</span>
-      </router-link>
+      </NuxtLink>
 
       <!-- 安全 Banner (居中显示) -->
       <div class="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50/50 border border-blue-100/50 text-blue-700 text-sm font-medium">
@@ -24,7 +24,7 @@ const route = useRoute()
 
       <!-- 右侧导航 -->
       <nav class="flex items-center gap-4">
-        <router-link 
+        <NuxtLink 
           v-if="route.path !== '/'" 
           to="/" 
           class="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-1 whitespace-nowrap"
@@ -33,7 +33,7 @@ const route = useRoute()
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
           返回首页
-        </router-link>
+        </NuxtLink>
       </nav>
     </div>
 

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import browserImageCompression from 'browser-image-compression'
-import { Upload, Download } from 'lucide-vue-next'
+import { Upload, Download, Info } from 'lucide-vue-next'
 
 // 图片状态管理
 const state = reactive({
@@ -22,7 +22,8 @@ const compressionOptions = reactive({
   maxSizeMB: 1,
   maxWidthOrHeight: 1920,
   initialQuality: 80,
-  useWebWorker: true
+  useWebWorker: true,
+  resolutionMode: 'custom' // 'original' | 'custom'
 })
 
 // 创建图片 URL 的辅助函数
@@ -61,6 +62,11 @@ const compressImage = async (imageIndex) => {
   const options = {
     ...compressionOptions,
     initialQuality: compressionOptions.initialQuality / 100
+  }
+
+  // 如果选择保持原图分辨率，则移除 maxWidthOrHeight 限制
+  if (compressionOptions.resolutionMode === 'original') {
+    delete options.maxWidthOrHeight
   }
   
   try {
@@ -166,6 +172,12 @@ const handleClickUpload = () => {
     fileInput.value.click()
   }
 }
+
+useSeoMeta({
+  title: '在线图片压缩 - 免费无损压缩 PNG/JPG - LocalTools',
+  description: '高效的本地图片压缩工具，无需上传服务器，支持批量压缩 PNG、JPG、WebP 图片，智能平衡画质与体积。用户数据完全安全。',
+  keywords: '图片压缩, 在线压缩, PNG压缩, JPG压缩, 本地工具, 免费压缩'
+})
 </script>
 
 <template>
@@ -184,43 +196,86 @@ const handleClickUpload = () => {
         </svg>
         <span>压缩配置</span>
       </h3>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="flex flex-col gap-2">
-          <label class="text-sm font-medium text-gray-700">最大文件大小 (MB)</label>
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+        <div class="md:col-span-2 flex flex-col gap-2">
+          <label class="text-sm font-medium text-gray-700">最大大小(MB)</label>
           <input 
             type="number" 
             v-model.number="compressionOptions.maxSizeMB" 
             min="0.1" 
             max="10" 
             step="0.1"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
           >
         </div>
-        <div class="flex flex-col gap-2">
-          <label class="text-sm font-medium text-gray-700">最大宽/高 (px)</label>
-          <input 
-            type="number" 
-            v-model.number="compressionOptions.maxWidthOrHeight" 
-            min="320" 
-            max="4096" 
-            step="10"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-          >
-        </div>
-        <div class="flex flex-col gap-2">
-          <label class="text-sm font-medium text-gray-700">初始质量 (%)</label>
+
+        <div class="md:col-span-2 flex flex-col gap-2">
+          <label class="text-sm font-medium text-gray-700">初始质量(%)</label>
           <input 
             type="number" 
             v-model.number="compressionOptions.initialQuality" 
             min="10" 
             max="100" 
             step="10"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
           >
         </div>
+
+        <!-- 分辨率设置 -->
+        <div class="md:col-span-5 flex flex-col gap-2">
+          <label class="text-sm font-medium text-gray-700">分辨率</label>
+          <div class="flex flex-wrap items-center gap-2 h-[42px]">
+            <div class="flex items-center gap-1">
+              <label class="inline-flex items-center cursor-pointer">
+                <input type="radio" v-model="compressionOptions.resolutionMode" value="original" class="hidden peer">
+                <span class="px-3 py-2 text-sm rounded-lg border border-gray-200 peer-checked:bg-gray-900 peer-checked:text-white peer-checked:border-gray-900 transition-all hover:bg-gray-50 peer-checked:hover:bg-gray-900 whitespace-nowrap">保持原图</span>
+              </label>
+              <label class="inline-flex items-center cursor-pointer">
+                <input type="radio" v-model="compressionOptions.resolutionMode" value="custom" class="hidden peer">
+                <span class="px-3 py-2 text-sm rounded-lg border border-gray-200 peer-checked:bg-gray-900 peer-checked:text-white peer-checked:border-gray-900 transition-all hover:bg-gray-50 peer-checked:hover:bg-gray-900 whitespace-nowrap">自定义</span>
+              </label>
+            </div>
+            
+            <div v-if="compressionOptions.resolutionMode === 'custom'" class="flex items-center gap-1">
+               <div class="relative w-24">
+                 <input 
+                  type="number" 
+                  v-model.number="compressionOptions.maxWidthOrHeight" 
+                  min="320" 
+                  max="4096" 
+                  step="10"
+                  class="w-full pl-2 pr-6 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                >
+                <span class="absolute right-2 top-2.5 text-xs text-gray-400 pointer-events-none">px</span>
+              </div>
+              
+              <div class="group relative flex items-center">
+                <Info class="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help transition-colors" />
+                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-[240px] p-2 bg-gray-900/95 backdrop-blur-sm text-white text-xs rounded shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 leading-relaxed">
+                  限制图片的最大边长。若原图宽高均未超过此值，则保持原尺寸；若超过，则在保持比例的前提下缩小至此数值。
+                  <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900/95"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="md:col-span-3 flex justify-end pb-[2px]">
+          <button 
+            v-if="state.images.length > 0"
+            @click="compressImages"
+            :disabled="isCompressing"
+            class="w-full px-4 py-2 bg-gray-900 hover:bg-black text-white text-sm font-medium rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 whitespace-nowrap"
+            title="使用当前配置重新压缩所有图片"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            重新压缩
+          </button>
+        </div>
       </div>
-    </div>
-      
+    </div>  
       <!-- 文件输入框 -->
       <input 
         type="file" 
@@ -265,66 +320,6 @@ const handleClickUpload = () => {
       </div>
       
       <!-- 图片预览和数据对比 -->
-      <div v-if="state.images.length > 0" class="mt-10">
-        <!-- 批量下载按钮 -->
-        <div class="flex justify-center mb-8">
-          <button 
-            class="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-1 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
-            @click="downloadAllCompressedImages"
-            :disabled="isCompressing"
-          >
-            <Download class="h-6 w-6" />
-            批量下载所有压缩图片
-          </button>
-        </div>
-        
-        <!-- 图片列表 -->
-        <div class="space-y-8">
-          <div v-for="(image, index) in state.images" :key="index" class="grid grid-cols-2 gap-6">
-            <!-- 原图 -->
-            <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-              <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-semibold text-gray-800">原图</h2>
-                <span class="bg-gray-200 text-gray-700 text-sm font-medium px-3 py-1 rounded-full">{{ formatFileSize(image.originalSize) }}</span>
-              </div>
-              <img 
-                :src="createImageUrl(image.original)" 
-                alt="原图" 
-                class="w-full h-auto rounded-lg object-contain"
-              />
-            </div>
-            
-            <!-- 压缩后图片 -->
-            <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-              <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-semibold text-gray-800">压缩后图片</h2>
-                <div class="flex gap-2">
-                  <span class="bg-gray-200 text-gray-700 text-sm font-medium px-3 py-1 rounded-full">{{ formatFileSize(image.compressedSize) }}</span>
-                  <span v-if="image.compressionRatio > 0" class="bg-green-100 text-green-700 text-sm font-medium px-3 py-1 rounded-full">-{{ image.compressionRatio }}%</span>
-                </div>
-              </div>
-              <div v-if="image.isCompressing" class="flex flex-col items-center justify-center h-64">
-                <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-b-4 border-blue-500 mb-4"></div>
-                <p class="text-gray-600">正在压缩...</p>
-              </div>
-              <div v-else>
-                <img 
-                  :src="createImageUrl(image.compressed)" 
-                  alt="压缩后图片" 
-                  class="w-full h-auto rounded-lg object-contain"
-                />
-                <button 
-                  v-if="image.compressed" 
-                  class="mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
-                  @click="downloadCompressedImage(index)"
-                >
-                  <Download class="h-5 w-5" />
-                  下载
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
       <div v-if="state.images.length > 0" class="mt-8">
         <!-- 批量下载按钮 -->
         <div class="flex justify-end mb-6">
@@ -397,6 +392,5 @@ const handleClickUpload = () => {
           </div>
         </div>
       </div>
-    </div>
   </div>
 </template>
