@@ -121,6 +121,46 @@ useSeoMeta({
             立即开始 <span class="ml-1">&rarr;</span>
           </div>
         </NuxtLink>
+        
+        <!-- 二维码生成器 -->
+        <NuxtLink 
+          to="/qrcode-generator" 
+          class="group relative bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl border border-gray-100 transition-all duration-300 flex flex-col items-start overflow-hidden active:scale-95"
+        >
+          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 to-blue-500"></div>
+          <div class="w-12 h-12 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+            </svg>
+          </div>
+          <h2 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-cyan-600 transition-colors">二维码生成器</h2>
+          <p class="text-gray-500 text-sm leading-relaxed">
+            输入文字或链接，快速生成二维码图片，支持自定义样式。
+          </p>
+          <div class="mt-auto pt-6 flex items-center text-cyan-600 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
+            立即开始 <span class="ml-1">&rarr;</span>
+          </div>
+        </NuxtLink>
+        
+        <!-- JSON 工具 -->
+        <NuxtLink 
+          to="/json-tools" 
+          class="group relative bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl border border-gray-100 transition-all duration-300 flex flex-col items-start overflow-hidden active:scale-95"
+        >
+          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-yellow-500"></div>
+          <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+            </svg>
+          </div>
+          <h2 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-amber-600 transition-colors">JSON 工具</h2>
+          <p class="text-gray-500 text-sm leading-relaxed">
+            格式化、压缩、转义、智能纠错、差异对比，一站式处理 JSON。
+          </p>
+          <div class="mt-auto pt-6 flex items-center text-amber-600 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
+            立即开始 <span class="ml-1">&rarr;</span>
+          </div>
+        </NuxtLink>
       </div>
 
       <!-- 底部版权 -->
