@@ -101,6 +101,26 @@ useSeoMeta({
             立即开始 <span class="ml-1">&rarr;</span>
           </div>
         </NuxtLink>
+        
+        <!-- 图片隐私清除工具 -->
+        <NuxtLink 
+          to="/image-privacy" 
+          class="group relative bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl border border-gray-100 transition-all duration-300 flex flex-col items-start overflow-hidden active:scale-95"
+        >
+          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500 to-pink-500"></div>
+          <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+          </div>
+          <h2 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-rose-600 transition-colors">图片隐私清除</h2>
+          <p class="text-gray-500 text-sm leading-relaxed">
+            查看并清除图片中的隐私信息，如 GPS 位置、设备型号、拍摄时间等。
+          </p>
+          <div class="mt-auto pt-6 flex items-center text-rose-600 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
+            立即开始 <span class="ml-1">&rarr;</span>
+          </div>
+        </NuxtLink>
       </div>
 
       <!-- 底部版权 -->
