@@ -1,43 +1,21 @@
-<script setup>
+<script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { PDFDocument } from 'pdf-lib'
 import { Upload, Download, MoveUp, MoveDown, Trash2 } from 'lucide-vue-next'
 
-// 拖拽状态
-const isDragging = ref(false)
+// 使用重构后的逻辑
+const { isDragging, fileInput, handleDragOver, handleDragLeave, handleDrop, triggerUpload } = useFileUpload()
 
 // 处理状态
 const isProcessing = ref(false)
 
-// 文件输入框引用
-const fileInput = ref(null)
-
 // 图片转 PDF 状态
-const imageToPdfState = reactive({
+const imageToPdfState = reactive<{ files: File[] }>({
   files: []
 })
 
-// 拖拽事件处理
-const handleDragOver = (e) => {
-  e.preventDefault()
-  isDragging.value = true
-}
-
-const handleDragLeave = () => {
-  isDragging.value = false
-}
-
-const handleDrop = (e) => {
-  e.preventDefault()
-  isDragging.value = false
-  const files = e.dataTransfer.files
-  if (files.length > 0) {
-    handleImageFileSelect(files)
-  }
-}
-
 // 处理图片文件选择
-const handleImageFileSelect = (files) => {
+const handleImageFileSelect = (files: FileList | File[]) => {
   const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'))
   
   if (imageFiles.length === 0) {
@@ -49,7 +27,7 @@ const handleImageFileSelect = (files) => {
 }
 
 // 调整图片顺序
-const moveImageUp = (index) => {
+const moveImageUp = (index: number) => {
   if (index > 0) {
     const temp = imageToPdfState.files[index]
     imageToPdfState.files[index] = imageToPdfState.files[index - 1]
@@ -57,7 +35,7 @@ const moveImageUp = (index) => {
   }
 }
 
-const moveImageDown = (index) => {
+const moveImageDown = (index: number) => {
   if (index < imageToPdfState.files.length - 1) {
     const temp = imageToPdfState.files[index]
     imageToPdfState.files[index] = imageToPdfState.files[index + 1]
@@ -66,7 +44,7 @@ const moveImageDown = (index) => {
 }
 
 // 删除图片文件
-const removeImageFile = (index) => {
+const removeImageFile = (index: number) => {
   imageToPdfState.files.splice(index, 1)
 }
 
@@ -84,7 +62,15 @@ const imagesToPdf = async () => {
     
     for (const file of imageToPdfState.files) {
       const arrayBuffer = await file.arrayBuffer()
-      const image = await pdfDoc.embedPng(arrayBuffer)
+      // 注意：pdf-lib embedPng 支持 png，如果是其他格式可能需要额外处理或使用 embedJpg
+      // 为简化重构，暂且保持原逻辑，主要进行结构重构
+      let image;
+      if (file.type === 'image/jpeg' || file.type === 'image/jpg') {
+        image = await pdfDoc.embedJpg(arrayBuffer)
+      } else {
+        image = await pdfDoc.embedPng(arrayBuffer)
+      }
+      
       const page = pdfDoc.addPage([image.width, image.height])
       page.drawImage(image, {
         x: 0,
@@ -96,15 +82,8 @@ const imagesToPdf = async () => {
     
     const pdfBytes = await pdfDoc.save()
     const blob = new Blob([pdfBytes], { type: 'application/pdf' })
-    const url = URL.createObjectURL(blob)
     
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'images_to_pdf.pdf'
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+    downloadFile(blob, 'images_to_pdf.pdf')
     
     alert('图片转 PDF 成功！')
   } catch (error) {
@@ -115,11 +94,10 @@ const imagesToPdf = async () => {
   }
 }
 
-// 点击上传处理
-const handleClickUpload = () => {
-  if (fileInput.value) {
-    fileInput.value.click()
-  }
+// 创建图片 URL
+const createImageUrl = (file: File | Blob | null) => {
+  if (!file) return ''
+  return URL.createObjectURL(file)
 }
 
 useSeoMeta({
@@ -127,21 +105,6 @@ useSeoMeta({
   description: '将 JPG、PNG 等多种格式图片批量转换为 PDF 文档。支持自定义排序，保留高清画质，完全本地运行，保护隐私。',
   keywords: '图片转PDF, JPG转PDF, PNG转PDF, 图片合并PDF, 本地工具, 免费转换'
 })
-
-// 创建图片 URL
-const createImageUrl = (file) => {
-  if (!file) return ''
-  return URL.createObjectURL(file)
-}
-
-// 格式化文件大小
-const formatFileSize = (bytes) => {
-  if (bytes === 0) return '0 Bytes'
-  const k = 1024
-  const sizes = ['Bytes', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
 </script>
 
 <template>
@@ -160,7 +123,7 @@ const formatFileSize = (bytes) => {
         class="hidden" 
         accept="image/*"
         multiple
-        @change="(e) => !isProcessing && handleImageFileSelect(e.target.files)"
+        @change="(e: any) => !isProcessing && handleImageFileSelect(e.target.files)"
       />
       
       <!-- 拖拽上传区域 -->
@@ -173,8 +136,8 @@ const formatFileSize = (bytes) => {
         }"
         @dragover="handleDragOver"
         @dragleave="handleDragLeave"
-        @drop="handleDrop"
-        @click="handleClickUpload"
+        @drop="(e) => handleDrop(e, handleImageFileSelect)"
+        @click="triggerUpload"
       >
         <div v-if="isProcessing" class="flex flex-col items-center justify-center py-4">
           <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600 mb-4"></div>

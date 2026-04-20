@@ -1,38 +1,42 @@
-<script setup>
+<script setup lang="ts">
 import { ref, reactive, computed } from 'vue'
 import exifr from 'exifr'
 import { Upload, Download, Shield, MapPin, Camera, Calendar, Smartphone, AlertTriangle, CheckCircle } from 'lucide-vue-next'
 
+// 使用重构后的逻辑
+const { isDragging, fileInput, handleDragOver, handleDragLeave, handleDrop, triggerUpload } = useFileUpload()
+
 // 图片状态管理
-const state = reactive({
+interface ImageState {
+  original: File
+  exifData: any | null
+  isProcessing: boolean
+  cleaned: Blob | null
+}
+
+const state = reactive<{ images: ImageState[] }>({
   images: []
 })
-
-// 拖拽状态
-const isDragging = ref(false)
 
 // 处理状态
 const isProcessing = ref(false)
 
-// 文件输入框引用
-const fileInput = ref(null)
-
 // 创建图片 URL 的辅助函数
-const createImageUrl = (file) => {
+const createImageUrl = (file: File | Blob | null) => {
   if (!file) return ''
   return URL.createObjectURL(file)
 }
 
 // 格式化 GPS 坐标
-const formatGPS = (lat, lng) => {
-  if (!lat || !lng) return null
+const formatGPS = (lat: number, lng: number) => {
+  if (lat === undefined || lng === undefined) return null
   const latDir = lat >= 0 ? 'N' : 'S'
   const lngDir = lng >= 0 ? 'E' : 'W'
   return `${Math.abs(lat).toFixed(6)}° ${latDir}, ${Math.abs(lng).toFixed(6)}° ${lngDir}`
 }
 
 // 格式化日期
-const formatDate = (date) => {
+const formatDate = (date: any) => {
   if (!date) return null
   if (date instanceof Date) {
     return date.toLocaleString('zh-CN', {
@@ -48,17 +52,15 @@ const formatDate = (date) => {
 }
 
 // 解析 EXIF 数据
-const parseExifData = async (file) => {
+const parseExifData = async (file: File) => {
   try {
     const exif = await exifr.parse(file, {
-      // 启用所有可能的数据段
       tiff: true,
       exif: true,
       gps: true,
       icc: true,
       iptc: true,
       xmp: true,
-      // 额外选项
       translateKeys: true,
       translateValues: true,
       reviveValues: true,
@@ -66,8 +68,7 @@ const parseExifData = async (file) => {
     
     if (!exif) return null
     
-    // 整理并分类 EXIF 数据
-    const organized = {
+    const organized: any = {
       hasData: false,
       hasGPS: false,
       basic: {},
@@ -77,7 +78,6 @@ const parseExifData = async (file) => {
       raw: exif
     }
     
-    // 基础信息
     if (exif.ImageWidth) organized.basic['图片宽度'] = exif.ImageWidth + ' px'
     if (exif.ImageHeight) organized.basic['图片高度'] = exif.ImageHeight + ' px'
     if (exif.ExifImageWidth) organized.basic['图片宽度'] = exif.ExifImageWidth + ' px'
@@ -85,7 +85,6 @@ const parseExifData = async (file) => {
     if (exif.ColorSpace) organized.basic['色彩空间'] = exif.ColorSpace
     if (exif.BitsPerSample) organized.basic['位深度'] = exif.BitsPerSample
     
-    // 拍摄信息
     if (exif.Make) organized.camera['设备厂商'] = exif.Make
     if (exif.Model) organized.camera['设备型号'] = exif.Model
     if (exif.LensModel) organized.camera['镜头型号'] = exif.LensModel
@@ -109,8 +108,7 @@ const parseExifData = async (file) => {
     if (exif.MeteringMode) organized.camera['测光模式'] = exif.MeteringMode
     if (exif.Orientation) organized.camera['方向'] = exif.Orientation
     
-    // GPS 信息
-    if (exif.latitude && exif.longitude) {
+    if (exif.latitude !== undefined && exif.longitude !== undefined) {
       organized.gps['GPS 坐标'] = formatGPS(exif.latitude, exif.longitude)
       organized.hasGPS = true
     }
@@ -119,14 +117,12 @@ const parseExifData = async (file) => {
     if (exif.GPSImgDirection) organized.gps['拍摄方向'] = `${exif.GPSImgDirection.toFixed(1)}°`
     if (exif.GPSDateStamp) organized.gps['GPS 时间'] = exif.GPSDateStamp
     
-    // 软件信息
     if (exif.Software) organized.software['编辑软件'] = exif.Software
     if (exif.Artist) organized.software['作者'] = exif.Artist
     if (exif.Copyright) organized.software['版权'] = exif.Copyright
     if (exif.ImageDescription) organized.software['描述'] = exif.ImageDescription
     if (exif.HostComputer) organized.software['处理设备'] = exif.HostComputer
     
-    // 检查是否有数据
     organized.hasData = Object.keys(organized.basic).length > 0 ||
                         Object.keys(organized.camera).length > 0 ||
                         Object.keys(organized.gps).length > 0 ||
@@ -139,8 +135,7 @@ const parseExifData = async (file) => {
   }
 }
 
-// 处理文件选择
-const handleFileSelect = async (files) => {
+const handleFileSelect = async (files: FileList | File[]) => {
   const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'))
   
   if (imageFiles.length === 0) {
@@ -151,13 +146,12 @@ const handleFileSelect = async (files) => {
   isProcessing.value = true
   
   state.images = imageFiles.map(file => ({
-    original: file,
+    original: file as File,
     exifData: null,
     isProcessing: true,
     cleaned: null
   }))
   
-  // 解析所有图片的 EXIF 数据
   for (let i = 0; i < state.images.length; i++) {
     const image = state.images[i]
     image.exifData = await parseExifData(image.original)
@@ -167,8 +161,7 @@ const handleFileSelect = async (files) => {
   isProcessing.value = false
 }
 
-// 清除隐私信息（通过 Canvas 重绘）
-const cleanImage = (imageData) => {
+const cleanImage = (imageData: ImageState): Promise<Blob | null> => {
   return new Promise((resolve) => {
     const img = new Image()
     img.onload = () => {
@@ -176,18 +169,20 @@ const cleanImage = (imageData) => {
       canvas.width = img.naturalWidth
       canvas.height = img.naturalHeight
       const ctx = canvas.getContext('2d')
-      ctx.drawImage(img, 0, 0)
-      
-      canvas.toBlob((blob) => {
-        resolve(blob)
-      }, 'image/jpeg', 0.95)
+      if (ctx) {
+        ctx.drawImage(img, 0, 0)
+        canvas.toBlob((blob) => {
+          resolve(blob)
+        }, 'image/jpeg', 0.95)
+      } else {
+        resolve(null)
+      }
     }
     img.src = URL.createObjectURL(imageData.original)
   })
 }
 
-// 下载单张清除隐私后的图片
-const downloadCleanedImage = async (imageIndex) => {
+const downloadCleanedImage = async (imageIndex: number) => {
   const image = state.images[imageIndex]
   if (!image) return
   
@@ -195,75 +190,32 @@ const downloadCleanedImage = async (imageIndex) => {
   
   try {
     const cleanedBlob = await cleanImage(image)
-    const url = URL.createObjectURL(cleanedBlob)
-    const a = document.createElement('a')
-    a.href = url
-    const originalName = image.original.name.replace(/\.[^/.]+$/, '')
-    a.download = `${originalName}_cleaned.jpg`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+    if (cleanedBlob) {
+      const originalName = image.original.name.replace(/\.[^/.]+$/, '')
+      downloadFile(cleanedBlob, `${originalName}_cleaned.jpg`)
+    }
   } finally {
     image.isProcessing = false
   }
 }
 
-// 批量下载清除隐私后的图片
 const downloadAllCleanedImages = async () => {
   isProcessing.value = true
   
   for (let i = 0; i < state.images.length; i++) {
     await downloadCleanedImage(i)
-    // 添加延迟避免浏览器阻止多个下载
     await new Promise(resolve => setTimeout(resolve, 200))
   }
   
   isProcessing.value = false
 }
 
-// 统计信息
 const stats = computed(() => {
   const total = state.images.length
   const withExif = state.images.filter(img => img.exifData?.hasData).length
   const withGPS = state.images.filter(img => img.exifData?.hasGPS).length
   return { total, withExif, withGPS }
 })
-
-// 格式化文件大小
-const formatFileSize = (bytes) => {
-  if (bytes === 0) return '0 Bytes'
-  const k = 1024
-  const sizes = ['Bytes', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
-
-// 拖拽事件处理
-const handleDragOver = (e) => {
-  e.preventDefault()
-  isDragging.value = true
-}
-
-const handleDragLeave = () => {
-  isDragging.value = false
-}
-
-const handleDrop = (e) => {
-  e.preventDefault()
-  isDragging.value = false
-  const files = e.dataTransfer.files
-  if (files.length > 0) {
-    handleFileSelect(files)
-  }
-}
-
-// 点击上传处理
-const handleClickUpload = () => {
-  if (fileInput.value) {
-    fileInput.value.click()
-  }
-}
 
 useSeoMeta({
   title: '图片隐私信息清除 - 查看并移除 EXIF 数据 - LocalTools',
@@ -287,7 +239,7 @@ useSeoMeta({
       class="hidden" 
       accept="image/*"
       multiple
-      @change="(e) => !isProcessing && handleFileSelect(e.target.files)"
+      @change="(e: any) => !isProcessing && handleFileSelect(e.target.files)"
     />
     
     <!-- 拖拽上传区域 -->
@@ -300,9 +252,9 @@ useSeoMeta({
       }"
       @dragover="handleDragOver"
       @dragleave="handleDragLeave"
-      @drop="handleDrop"
+      @drop="(e) => handleDrop(e, handleFileSelect)"
       @dragenter="isDragging = true"
-      @click="handleClickUpload"
+      @click="triggerUpload"
     >
       
       <!-- 加载状态 -->
@@ -403,7 +355,7 @@ useSeoMeta({
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- 拍摄信息 -->
                     <div v-if="Object.keys(image.exifData.camera).length > 0" class="space-y-2">
-                      <h4 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                       <h4 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
                         <Camera class="w-4 h-4" />
                         拍摄信息
                       </h4>

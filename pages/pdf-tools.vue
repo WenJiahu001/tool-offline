@@ -1,43 +1,21 @@
-<script setup>
+<script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { PDFDocument } from 'pdf-lib'
 import { Upload, Download, MoveUp, MoveDown, Trash2 } from 'lucide-vue-next'
 
-// 拖拽状态
-const isDragging = ref(false)
+// 使用重构后的逻辑
+const { isDragging, fileInput, handleDragOver, handleDragLeave, handleDrop, triggerUpload } = useFileUpload()
 
 // 处理状态
 const isProcessing = ref(false)
 
-// 文件输入框引用
-const fileInput = ref(null)
-
 // PDF 合并状态
-const pdfMergeState = reactive({
+const pdfMergeState = reactive<{ files: File[] }>({
   files: []
 })
 
-// 拖拽事件处理
-const handleDragOver = (e) => {
-  e.preventDefault()
-  isDragging.value = true
-}
-
-const handleDragLeave = () => {
-  isDragging.value = false
-}
-
-const handleDrop = (e) => {
-  e.preventDefault()
-  isDragging.value = false
-  const files = e.dataTransfer.files
-  if (files.length > 0) {
-    handlePdfFileSelect(files)
-  }
-}
-
 // 处理 PDF 文件选择
-const handlePdfFileSelect = (files) => {
+const handlePdfFileSelect = (files: FileList | File[]) => {
   const pdfFiles = Array.from(files).filter(file => file.type === 'application/pdf')
   
   if (pdfFiles.length === 0) {
@@ -49,7 +27,7 @@ const handlePdfFileSelect = (files) => {
 }
 
 // 调整 PDF 顺序
-const movePdfUp = (index) => {
+const movePdfUp = (index: number) => {
   if (index > 0) {
     const temp = pdfMergeState.files[index]
     pdfMergeState.files[index] = pdfMergeState.files[index - 1]
@@ -57,7 +35,7 @@ const movePdfUp = (index) => {
   }
 }
 
-const movePdfDown = (index) => {
+const movePdfDown = (index: number) => {
   if (index < pdfMergeState.files.length - 1) {
     const temp = pdfMergeState.files[index]
     pdfMergeState.files[index] = pdfMergeState.files[index + 1]
@@ -66,7 +44,7 @@ const movePdfDown = (index) => {
 }
 
 // 删除 PDF 文件
-const removePdfFile = (index) => {
+const removePdfFile = (index: number) => {
   pdfMergeState.files.splice(index, 1)
 }
 
@@ -91,15 +69,8 @@ const mergePdfs = async () => {
     
     const pdfBytes = await mergedPdf.save()
     const blob = new Blob([pdfBytes], { type: 'application/pdf' })
-    const url = URL.createObjectURL(blob)
     
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'merged.pdf'
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+    downloadFile(blob, 'merged.pdf')
     
     alert('PDF 合并成功！')
   } catch (error) {
@@ -110,27 +81,11 @@ const mergePdfs = async () => {
   }
 }
 
-// 点击上传处理
-const handleClickUpload = () => {
-  if (fileInput.value) {
-    fileInput.value.click()
-  }
-}
-
 useSeoMeta({
   title: 'PDF 合并工具 - 免费在线合并 PDF 文件 - LocalTools',
   description: '专业的 PDF 合并工具，支持拖拽排序，快速将多个 PDF 文件合并为一个。所有处理均在本地浏览器完成，确保文档安全。',
   keywords: 'PDF合并, PDF拼接, 合并PDF, 本地PDF工具, 免费PDF工具'
 })
-
-// 格式化文件大小
-const formatFileSize = (bytes) => {
-  if (bytes === 0) return '0 Bytes'
-  const k = 1024
-  const sizes = ['Bytes', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
 </script>
 
 <template>
@@ -149,7 +104,7 @@ const formatFileSize = (bytes) => {
         class="hidden" 
         accept="application/pdf"
         multiple
-        @change="(e) => !isProcessing && handlePdfFileSelect(e.target.files)"
+        @change="(e: any) => !isProcessing && handlePdfFileSelect(e.target.files)"
       />
       
       <!-- 拖拽上传区域 -->
@@ -162,8 +117,8 @@ const formatFileSize = (bytes) => {
         }"
         @dragover="handleDragOver"
         @dragleave="handleDragLeave"
-        @drop="handleDrop"
-        @click="handleClickUpload"
+        @drop="(e) => handleDrop(e, handlePdfFileSelect)"
+        @click="triggerUpload"
       >
         <div v-if="isProcessing" class="flex flex-col items-center justify-center py-4">
           <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600 mb-4"></div>

@@ -1,21 +1,27 @@
-<script setup>
+<script setup lang="ts">
 import { ref, reactive } from 'vue'
 import browserImageCompression from 'browser-image-compression'
 import { Upload, Download, Info } from 'lucide-vue-next'
 
 // 图片状态管理
-const state = reactive({
+interface CompressedImage {
+  original: File
+  compressed: Blob | null
+  originalSize: number
+  compressedSize: number
+  compressionRatio: number
+  isCompressing: boolean
+}
+
+const state = reactive<{ images: CompressedImage[] }>({
   images: []
 })
 
-// 拖拽状态
-const isDragging = ref(false)
+// 使用重构后的文件上传逻辑
+const { isDragging, fileInput, handleDragOver, handleDragLeave, handleDrop, triggerUpload } = useFileUpload()
 
 // 压缩状态
 const isCompressing = ref(false)
-
-// 文件输入框引用
-const fileInput = ref(null)
 
 // 压缩配置
 const compressionOptions = reactive({
@@ -23,17 +29,17 @@ const compressionOptions = reactive({
   maxWidthOrHeight: 1920,
   initialQuality: 80,
   useWebWorker: true,
-  resolutionMode: 'custom' // 'original' | 'custom'
+  resolutionMode: 'custom' as 'original' | 'custom'
 })
 
 // 创建图片 URL 的辅助函数
-const createImageUrl = (file) => {
+const createImageUrl = (file: File | Blob | null) => {
   if (!file) return ''
   return URL.createObjectURL(file)
 }
 
 // 处理文件选择
-const handleFileSelect = (files) => {
+const handleFileSelect = (files: FileList | File[]) => {
   const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'))
   
   if (imageFiles.length === 0) {
@@ -42,7 +48,7 @@ const handleFileSelect = (files) => {
   }
   
   state.images = imageFiles.map(file => ({
-    original: file,
+    original: file as File,
     compressed: null,
     originalSize: file.size,
     compressedSize: 0,
@@ -54,12 +60,12 @@ const handleFileSelect = (files) => {
 }
 
 // 图片压缩函数
-const compressImage = async (imageIndex) => {
+const compressImage = async (imageIndex: number) => {
   const image = state.images[imageIndex]
   if (!image) return
   
   image.isCompressing = true
-  const options = {
+  const options: any = {
     ...compressionOptions,
     initialQuality: compressionOptions.initialQuality / 100
   }
@@ -70,18 +76,17 @@ const compressImage = async (imageIndex) => {
   }
   
   try {
-// 调用 browser-image-compression 库，对原始图片进行压缩
-// 参数：image.original 为原始文件对象，options 为压缩配置（最大 1MB、最大宽高 1920、启用 Web Worker）
-const compressedFile = await browserImageCompression(image.original, options)
-
-// 将压缩后的文件对象存回响应式数据，触发界面更新
-image.compressed = compressedFile
-
-// 记录压缩后文件的字节大小，用于显示
-image.compressedSize = compressedFile.size
-
-// 计算压缩率（百分比），公式：(1 - 压缩后大小 / 原始大小) * 100，四舍五入取整
-image.compressionRatio = Math.round((1 - image.compressedSize / image.originalSize) * 100)
+    // 调用 browser-image-compression 库，对原始图片进行压缩
+    const compressedFile = await browserImageCompression(image.original, options)
+    
+    // 将压缩后的文件对象存回响应式数据，触发界面更新
+    image.compressed = compressedFile
+    
+    // 记录压缩后文件的字节大小，用于显示
+    image.compressedSize = compressedFile.size
+    
+    // 计算压缩率（百分比）
+    image.compressionRatio = Math.round((1 - image.compressedSize / image.originalSize) * 100)
   } catch (error) {
     console.error('压缩失败：', error)
   } finally {
@@ -100,28 +105,12 @@ const compressImages = async () => {
   isCompressing.value = false
 }
 
-// 格式化文件大小
-const formatFileSize = (bytes) => {
-  if (bytes === 0) return '0 Bytes'
-  const k = 1024
-  const sizes = ['Bytes', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
-
 // 下载单张压缩图片
-const downloadCompressedImage = (imageIndex) => {
+const downloadCompressedImage = (imageIndex: number) => {
   const image = state.images[imageIndex]
   if (!image || !image.compressed) return
   
-  const url = URL.createObjectURL(image.compressed)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `compressed_${image.original.name}`
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
+  downloadFile(image.compressed as Blob, `compressed_${image.original.name}`)
 }
 
 // 批量下载压缩图片
@@ -135,42 +124,11 @@ const downloadAllCompressedImages = () => {
   
   compressedImages.forEach((image, index) => {
     setTimeout(() => {
-      const url = URL.createObjectURL(image.compressed)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `compressed_${image.original.name}`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
+      if (image.compressed) {
+        downloadFile(image.compressed as Blob, `compressed_${image.original.name}`)
+      }
     }, index * 100)
   })
-}
-
-// 拖拽事件处理
-const handleDragOver = (e) => {
-  e.preventDefault()
-  isDragging.value = true
-}
-
-const handleDragLeave = () => {
-  isDragging.value = false
-}
-
-const handleDrop = (e) => {
-  e.preventDefault()
-  isDragging.value = false
-  const files = e.dataTransfer.files
-  if (files.length > 0) {
-    handleFileSelect(files)
-  }
-}
-
-// 点击上传处理
-const handleClickUpload = () => {
-  if (fileInput.value) {
-    fileInput.value.click()
-  }
 }
 
 useSeoMeta({
@@ -276,7 +234,6 @@ useSeoMeta({
         </div>
       </div>
     </div>  
-      <!-- 文件输入框 -->
       <input 
         type="file" 
         id="fileInput" 
@@ -284,7 +241,7 @@ useSeoMeta({
         class="hidden" 
         accept="image/*"
         multiple
-        @change="(e) => !isCompressing && handleFileSelect(e.target.files)"
+        @change="(e: any) => !isCompressing && handleFileSelect(e.target.files)"
       />
       
       <!-- 拖拽上传区域 -->
@@ -297,9 +254,9 @@ useSeoMeta({
         }"
         @dragover="handleDragOver"
         @dragleave="handleDragLeave"
-        @drop="handleDrop"
+        @drop="(e) => handleDrop(e, handleFileSelect)"
         @dragenter="isDragging = true"
-        @click="handleClickUpload"
+        @click="triggerUpload"
       >
         
         <!-- 加载状态 -->

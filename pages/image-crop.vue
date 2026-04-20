@@ -8,14 +8,20 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <!-- 裁剪区域 -->
       <div class="lg:col-span-2">
-        <div class="bg-gray-100 rounded-xl shadow-sm border border-gray-200 overflow-hidden relative h-[600px] flex items-center justify-center">
+        <div 
+          class="bg-gray-100 rounded-xl shadow-sm border border-gray-200 overflow-hidden relative h-[600px] flex items-center justify-center"
+          :class="{ 'border-blue-500 bg-blue-50/50': isDragging }"
+          @dragover="handleDragOver"
+          @dragleave="handleDragLeave"
+          @drop="(e) => handleDrop(e, handleFileSelect)"
+        >
           <ClientOnly>
              <div v-if="!imgSrc" class="text-center p-8">
                 <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 mb-4">
                   <Upload class="h-8 w-8 text-blue-600" />
                 </div>
                 <h3 class="text-lg font-medium text-gray-900">选择一张图片开始裁剪</h3>
-                <p class="mt-1 text-gray-500 mb-6">支持 JPG, PNG 等常见格式</p>
+                <p class="mt-1 text-gray-500 mb-6">点击或将图片拖拽至此 (JPG, PNG)</p>
                 <button
                   @click="triggerUpload"
                   class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -56,7 +62,7 @@
             ref="fileInput" 
             accept="image/*" 
             class="hidden" 
-            @change="handleFileChange"
+            @change="(e: any) => handleFileSelect(e.target.files)"
           />
         </div>
         
@@ -188,6 +194,9 @@ import { Upload, Download, RefreshCw, ZoomIn, ZoomOut, RotateCw, RotateCcw } fro
 import { VueCropper } from 'vue-cropper'
 import 'vue-cropper/dist/index.css'
 
+// 使用重构后的逻辑
+const { isDragging, fileInput, handleDragOver, handleDragLeave, handleDrop, triggerUpload } = useFileUpload()
+
 // 预设尺寸定义 (按300DPI计算像素: 1mm ≈ 11.81px)
 const DPI = 300
 const MM_TO_PX = DPI / 25.4
@@ -210,7 +219,6 @@ const presets: Preset[] = [
 ]
 
 const cropper = ref()
-const fileInput = ref()
 const imgSrc = ref('')
 const currentPreset = ref<Preset | null>(null)
 
@@ -224,7 +232,7 @@ let isUpdatingSize = false
 const option = reactive({
   size: 1,
   full: false,
-  outputType: 'png',
+  outputType: 'png' as 'png' | 'jpeg' | 'webp',
   canMove: true,
   canMoveBox: true,
   original: false,
@@ -235,10 +243,10 @@ const option = reactive({
   high: true,
   maxImgSize: 5000, // 增加最大尺寸限制
   fixed: true, // 锁定比例
-  fixedNumber: [295, 413], // 截图框的宽高比例
+  fixedNumber: [295, 413] as [number, number], // 截图框的宽高比例
   fixedBox: false, // 允许改变截图框大小
   canScale: true, // 允许滚轮缩放图片
-  limitMinSize: [50, 50], // 放宽最小裁剪限制
+  limitMinSize: [50, 50] as [number, number], // 放宽最小裁剪限制
 })
 
 // 监听宽度变化来实现联动
@@ -247,8 +255,6 @@ watch(customWidth, (newVal) => {
   isUpdatingSize = true
   const ratio = option.fixedNumber[1] / option.fixedNumber[0]
   customHeight.value = Math.round(newVal * ratio)
-  // 更新裁剪框比例 (虽然比例没变，但尺寸变了可能需要重置一下框?)
-  // 不需要，因为比例还是那个比例
   isUpdatingSize = false
 })
 
@@ -269,16 +275,9 @@ watch(() => option.fixed, (val) => {
     }
 })
 
-const triggerUpload = () => {
-  fileInput.value.click()
-}
-
-const handleFileChange = (e: Event) => {
-  const input = e.target as HTMLInputElement
-  if (!input.files?.length) return
-  
-  const file = input.files[0]
-  if (!file.type.startsWith('image/')) return
+const handleFileSelect = (files: FileList | File[]) => {
+  const file = Array.from(files).find(f => f.type.startsWith('image/'))
+  if (!file) return
 
   const reader = new FileReader()
   reader.onload = (e) => {
@@ -287,7 +286,6 @@ const handleFileChange = (e: Event) => {
     applyPreset(presets[1])
   }
   reader.readAsDataURL(file)
-  input.value = ''
 }
 
 const applyPreset = (preset: Preset) => {
@@ -428,14 +426,11 @@ const downloadImage = () => {
              const mimeType = option.outputType === 'png' ? 'image/png' : 'image/jpeg'
              canvas.toBlob((finalBlob) => {
                  if (finalBlob) {
-                     const downloadUrl = URL.createObjectURL(finalBlob)
-                     const a = document.createElement('a')
-                     a.href = downloadUrl
                      const suffix = option.outputType === 'png' ? 'png' : 'jpg'
                      const sizeName = currentPreset.value ? `_${currentPreset.value.name}` : ''
-                     a.download = `crop_image${sizeName}_${canvas.width}x${canvas.height}.${suffix}`
-                     a.click()
-                     URL.revokeObjectURL(downloadUrl)
+                     if (finalBlob) {
+                        downloadFile(finalBlob, `crop_image${sizeName}_${canvas.width}x${canvas.height}.${suffix}`)
+                     }
                  }
                  URL.revokeObjectURL(url)
              }, mimeType, 0.95) // JPG 质量 0.95
