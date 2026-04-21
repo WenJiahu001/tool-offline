@@ -36,6 +36,17 @@ npm run preview    # 预览构建产物 (nuxt preview)
 | `qrcode` | 二维码生成 |
 | `lucide-vue-next` | 图标库 |
 
+## 共享模块
+
+| 模块 | 导出 | 用途 |
+|---|---|---|
+| `composables/useFileUpload.ts` | `useFileUpload()` | 封装拖拽+点击上传逻辑（`isDragging`、`fileInput`、`handleDragOver`、`handleDragLeave`、`handleDrop`、`triggerUpload`） |
+| `utils/file.ts` | `formatFileSize()` | 格式化文件大小（如 "1.2 MB"） |
+| `utils/file.ts` | `downloadFile()` | 触发浏览器下载文件 |
+| `utils/file.ts` | `createImageUrl()` | 基于 File/Blob 创建 Object URL |
+
+以上模块通过 Nuxt auto-import 自动引入，无需手动 import。
+
 ## 页面与功能
 
 | 页面文件 | 路由 | 功能 |
@@ -52,8 +63,9 @@ npm run preview    # 预览构建产物 (nuxt preview)
 ## 代码模式
 
 - **数据流**: 用户上传文件 → 浏览器本地处理 → 预览结果 → 触发下载
-- **文件上传**: 每个页面均实现拖拽 + 点击上传，拖拽逻辑 (`handleDragOver`/`handleDragLeave`/`handleDrop`) 在多页面重复
-- **文件大小格式化**: `formatFileSize()` 函数在多个页面重复定义
-- **下载方式**: 动态创建 `<a>` 标签触发
+- **文件上传**: 使用 `composables/useFileUpload.ts` 封装的 `useFileUpload()` 统一处理拖拽+点击上传
+- **文件大小格式化**: 使用 `utils/file.ts` 中的 `formatFileSize()` 统一处理
+- **图片 URL 创建**: 使用 `utils/file.ts` 中的 `createImageUrl()` 统一处理
+- **下载方式**: 使用 `utils/file.ts` 中的 `downloadFile()` 统一处理
 - **SEO**: 每个页面使用 `useSeoMeta()` 设置中文 title/description/keywords
-- **TypeScript**: 仅 `image-crop.vue` 使用了 `<script setup lang="ts">`，其余页面为 JavaScript
+- **TypeScript**: 所有页面均使用 `<script setup lang="ts">`

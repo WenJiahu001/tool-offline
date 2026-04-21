@@ -32,12 +32,6 @@ const compressionOptions = reactive({
   resolutionMode: 'custom' as 'original' | 'custom'
 })
 
-// 创建图片 URL 的辅助函数
-const createImageUrl = (file: File | Blob | null) => {
-  if (!file) return ''
-  return URL.createObjectURL(file)
-}
-
 // 处理文件选择
 const handleFileSelect = (files: FileList | File[]) => {
   const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'))

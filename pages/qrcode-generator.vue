@@ -67,12 +67,11 @@ const generateQRCode = async () => {
 const downloadQRCode = () => {
   if (!canvasRef.value || !hasQRCode.value) return
   
-  const link = document.createElement('a')
-  link.download = `qrcode_${Date.now()}.png`
-  link.href = canvasRef.value.toDataURL('image/png')
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
+  canvasRef.value.toBlob((blob) => {
+    if (blob) {
+      downloadFile(blob, `qrcode_${Date.now()}.png`)
+    }
+  }, 'image/png')
 }
 
 // 复制到剪贴板

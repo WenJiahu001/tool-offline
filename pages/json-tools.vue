@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { Copy, Check, FileJson, Minimize2, Maximize2, Code, ArrowRightLeft, Wrench, ChevronDown, ChevronRight, AlertCircle, CheckCircle, Upload, Download } from 'lucide-vue-next'
+import { Copy, Check, FileJson, Minimize2, Maximize2, Code, ArrowRightLeft, Wrench, ChevronDown, ChevronRight, AlertCircle, CheckCircle, Upload, Download, X } from 'lucide-vue-next'
 
 // 使用重构后的逻辑
 const { isDragging, fileInput, handleDragOver, handleDragLeave, handleDrop, triggerUpload } = useFileUpload()
@@ -39,9 +39,6 @@ const clearMessages = () => {
 const showSuccess = (msg: string) => {
   successMessage.value = msg
   errorMessage.value = ''
-  setTimeout(() => {
-    successMessage.value = ''
-  }, 3000)
 }
 
 // 处理文件上传/拖拽
@@ -407,11 +404,17 @@ useSeoMeta({
     <!-- 消息提示 -->
     <div v-if="errorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700 text-sm">
       <AlertCircle class="w-4 h-4 shrink-0" />
-      {{ errorMessage }}
+      <span class="flex-1">{{ errorMessage }}</span>
+      <button @click="errorMessage = ''" class="p-0.5 hover:bg-red-100 rounded transition-colors">
+        <X class="w-4 h-4" />
+      </button>
     </div>
     <div v-if="successMessage" class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-700 text-sm">
       <CheckCircle class="w-4 h-4 shrink-0" />
-      {{ successMessage }}
+      <span class="flex-1">{{ successMessage }}</span>
+      <button @click="successMessage = ''" class="p-0.5 hover:bg-green-100 rounded transition-colors">
+        <X class="w-4 h-4" />
+      </button>
     </div>
     
     <!-- 格式化/转义模式 -->

@@ -21,12 +21,6 @@ const state = reactive<{ images: ImageState[] }>({
 // 处理状态
 const isProcessing = ref(false)
 
-// 创建图片 URL 的辅助函数
-const createImageUrl = (file: File | Blob | null) => {
-  if (!file) return ''
-  return URL.createObjectURL(file)
-}
-
 // 格式化 GPS 坐标
 const formatGPS = (lat: number, lng: number) => {
   if (lat === undefined || lng === undefined) return null

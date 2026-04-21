@@ -26,3 +26,13 @@ export const downloadFile = (blob: Blob, fileName: string): void => {
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
 }
+
+/**
+ * 创建图片 URL（基于 Blob/File 对象）
+ * @param file 文件对象，为 null 时返回空字符串
+ * @returns 图片的 Object URL
+ */
+export const createImageUrl = (file: File | Blob | null): string => {
+  if (!file) return ''
+  return URL.createObjectURL(file)
+}
