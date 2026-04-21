@@ -201,6 +201,26 @@ useSeoMeta({
             立即开始 <span class="ml-1">&rarr;</span>
           </div>
         </NuxtLink>
+
+        <!-- URL 编解码 -->
+        <NuxtLink 
+          to="/url-encode" 
+          class="group relative bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl border border-gray-100 transition-all duration-300 flex flex-col items-start overflow-hidden active:scale-95"
+        >
+          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-500 to-emerald-500"></div>
+          <div class="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+          </div>
+          <h2 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-teal-600 transition-colors">URL 编解码</h2>
+          <p class="text-gray-500 text-sm leading-relaxed">
+            URL 编码与解码，支持查询参数解析，快速处理特殊字符。
+          </p>
+          <div class="mt-auto pt-6 flex items-center text-teal-600 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
+            立即开始 <span class="ml-1">&rarr;</span>
+          </div>
+        </NuxtLink>
       </div>
 
       <!-- 底部版权 -->

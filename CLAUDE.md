@@ -63,6 +63,7 @@ npm run preview    # 预览构建产物 (nuxt preview)
 | `json-tools.vue` | `/json-tools` | JSON 格式化/压缩/转义/对比 |
 | `image-convert.vue` | `/image-convert` | 图片格式转换（PNG/JPG/WebP 互转） |
 | `markdown-editor.vue` | `/markdown-editor` | Markdown 编辑器（实时预览、代码高亮） |
+| `url-encode.vue` | `/url-encode` | URL 编码/解码/查询参数解析 |
 
 ## 代码模式
 
