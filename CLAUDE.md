@@ -34,6 +34,8 @@ npm run preview    # 预览构建产物 (nuxt preview)
 | `exifr` | EXIF 元数据解析 |
 | `pdf-lib` | PDF 创建与合并 |
 | `qrcode` | 二维码生成 |
+| `marked` | Markdown 解析渲染 |
+| `highlight.js` | 代码语法高亮 |
 | `lucide-vue-next` | 图标库 |
 
 ## 共享模块
@@ -59,6 +61,8 @@ npm run preview    # 预览构建产物 (nuxt preview)
 | `pdf-tools.vue` | `/pdf-tools` | PDF 文件合并 |
 | `qrcode-generator.vue` | `/qrcode-generator` | 二维码生成器 |
 | `json-tools.vue` | `/json-tools` | JSON 格式化/压缩/转义/对比 |
+| `image-convert.vue` | `/image-convert` | 图片格式转换（PNG/JPG/WebP 互转） |
+| `markdown-editor.vue` | `/markdown-editor` | Markdown 编辑器（实时预览、代码高亮） |
 
 ## 代码模式
 

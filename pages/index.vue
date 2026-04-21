@@ -161,6 +161,46 @@ useSeoMeta({
             立即开始 <span class="ml-1">&rarr;</span>
           </div>
         </NuxtLink>
+
+        <!-- 图片格式转换 -->
+        <NuxtLink 
+          to="/image-convert" 
+          class="group relative bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl border border-gray-100 transition-all duration-300 flex flex-col items-start overflow-hidden active:scale-95"
+        >
+          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-500 to-purple-500"></div>
+          <div class="w-12 h-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </div>
+          <h2 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-violet-600 transition-colors">图片格式转换</h2>
+          <p class="text-gray-500 text-sm leading-relaxed">
+            PNG、JPG、WebP 格式互转，支持批量处理与质量调节。
+          </p>
+          <div class="mt-auto pt-6 flex items-center text-violet-600 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
+            立即开始 <span class="ml-1">&rarr;</span>
+          </div>
+        </NuxtLink>
+
+        <!-- Markdown 编辑器 -->
+        <NuxtLink 
+          to="/markdown-editor" 
+          class="group relative bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl border border-gray-100 transition-all duration-300 flex flex-col items-start overflow-hidden active:scale-95"
+        >
+          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-slate-600 to-gray-700"></div>
+          <div class="w-12 h-12 rounded-xl bg-slate-50 text-slate-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </div>
+          <h2 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-slate-600 transition-colors">Markdown 编辑器</h2>
+          <p class="text-gray-500 text-sm leading-relaxed">
+            实时预览、代码高亮，支持导入导出 .md 和 .html 文件。
+          </p>
+          <div class="mt-auto pt-6 flex items-center text-slate-600 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
+            立即开始 <span class="ml-1">&rarr;</span>
+          </div>
+        </NuxtLink>
       </div>
 
       <!-- 底部版权 -->
