@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { computed, ref, reactive } from 'vue'
 import { Upload, Download, RefreshCw } from 'lucide-vue-next'
 
 interface ConvertedImage {
@@ -15,9 +15,23 @@ const state = reactive<{ images: ConvertedImage[] }>({
   images: []
 })
 
-const { isDragging, fileInput, handleDragOver, handleDragLeave, handleDrop, triggerUpload } = useFileUpload()
+const {
+  errorMessage,
+  successMessage,
+  showError,
+  showSuccess,
+} = useToolFeedback()
+
+const previewUrls = useObjectUrlMap()
 
 const isConverting = ref(false)
+
+const { isDragging, fileInput, handleDragOver, handleDragLeave, handleDrop, triggerUpload, handleInputChange } = useFileUpload({
+  accept: 'image/*',
+  multiple: true,
+  disabled: isConverting,
+  onError: showError,
+})
 
 // 目标格式
 const targetFormat = ref<string>('image/png')
@@ -28,6 +42,17 @@ const formatOptions = [
   { label: 'JPG', value: 'image/jpeg', ext: 'jpg', desc: '有损，体积小' },
   { label: 'WebP', value: 'image/webp', ext: 'webp', desc: '新一代格式，体积更小' }
 ]
+
+const getOriginalPreviewKey = (index: number) => `original-${index}`
+const getConvertedPreviewKey = (index: number) => `converted-${index}`
+
+const syncPreviewUrls = () => {
+  previewUrls.clear()
+  state.images.forEach((image, index) => {
+    previewUrls.set(getOriginalPreviewKey(index), image.original)
+    previewUrls.set(getConvertedPreviewKey(index), image.converted)
+  })
+}
 
 const getFormatExt = (mimeType: string) => {
   const opt = formatOptions.find(f => f.value === mimeType)
@@ -44,7 +69,7 @@ const handleFileSelect = (files: FileList | File[]) => {
   const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'))
 
   if (imageFiles.length === 0) {
-    alert('请选择图片文件！')
+    showError('请选择图片文件！')
     return
   }
 
@@ -56,6 +81,8 @@ const handleFileSelect = (files: FileList | File[]) => {
     originalType: file.type,
     isConverting: false
   }))
+
+  syncPreviewUrls()
 
   convertImages()
 }
@@ -104,8 +131,10 @@ const convertImage = async (imageIndex: number) => {
 
     image.converted = blob
     image.convertedSize = blob.size
+    previewUrls.set(getConvertedPreviewKey(imageIndex), blob)
   } catch (error) {
     console.error('转换失败：', error)
+    showError(`图片转换失败：${image.original.name}`)
   } finally {
     image.isConverting = false
   }
@@ -120,6 +149,7 @@ const convertImages = async () => {
   }
 
   isConverting.value = false
+  showSuccess(`已完成 ${state.images.length} 张图片转换`)
 }
 
 // 下载单张
@@ -137,7 +167,7 @@ const downloadAllConvertedImages = () => {
   const convertedImages = state.images.filter(image => image.converted)
 
   if (convertedImages.length === 0) {
-    alert('没有可下载的图片！')
+    showError('没有可下载的图片！')
     return
   }
 
@@ -151,16 +181,19 @@ const downloadAllConvertedImages = () => {
       }
     }, index * 100)
   })
+  showSuccess('浏览器将依次触发多张图片下载')
 }
 
 // 移除单张
 const removeImage = (index: number) => {
   state.images.splice(index, 1)
+  syncPreviewUrls()
 }
 
 // 清空全部
 const clearAll = () => {
   state.images = []
+  previewUrls.clear()
 }
 
 // 计算总大小变化
@@ -180,6 +213,12 @@ useSeoMeta({
       <h1 class="text-3xl font-bold text-gray-900 mb-2">图片格式转换</h1>
       <p class="text-gray-500">支持 PNG、JPG、WebP 格式互转，批量处理，纯本地运行。</p>
     </div>
+    <ToolFeedback
+      :error="errorMessage"
+      :success="successMessage"
+      @close-error="errorMessage = ''"
+      @close-success="successMessage = ''"
+    />
 
     <!-- 转换配置 -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
@@ -243,7 +282,7 @@ useSeoMeta({
       class="hidden"
       accept="image/*"
       multiple
-      @change="(e: any) => !isConverting && handleFileSelect(e.target.files)"
+      @change="(e) => handleInputChange(e, handleFileSelect)"
     />
 
     <!-- 拖拽上传区域 -->
@@ -321,8 +360,8 @@ useSeoMeta({
           <div class="p-5 flex items-center gap-5">
             <!-- 原图预览 -->
             <div class="flex-shrink-0 w-20 h-20 bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center border border-gray-100">
-              <img
-                :src="createImageUrl(image.original)"
+                <img
+                :src="previewUrls.get(getOriginalPreviewKey(index))"
                 alt="原图"
                 class="max-w-full max-h-full object-contain"
               />

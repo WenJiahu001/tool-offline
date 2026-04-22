@@ -3,11 +3,22 @@ import { ref, reactive } from 'vue'
 import { PDFDocument } from 'pdf-lib'
 import { Upload, Download, MoveUp, MoveDown, Trash2 } from 'lucide-vue-next'
 
-// 使用重构后的逻辑
-const { isDragging, fileInput, handleDragOver, handleDragLeave, handleDrop, triggerUpload } = useFileUpload()
-
 // 处理状态
 const isProcessing = ref(false)
+
+const {
+  errorMessage,
+  successMessage,
+  showError,
+  showSuccess,
+} = useToolFeedback()
+
+const { isDragging, fileInput, handleDragOver, handleDragLeave, handleDrop, triggerUpload, handleInputChange } = useFileUpload({
+  accept: 'application/pdf',
+  multiple: true,
+  disabled: isProcessing,
+  onError: showError,
+})
 
 // PDF 合并状态
 const pdfMergeState = reactive<{ files: File[] }>({
@@ -19,7 +30,7 @@ const handlePdfFileSelect = (files: FileList | File[]) => {
   const pdfFiles = Array.from(files).filter(file => file.type === 'application/pdf')
   
   if (pdfFiles.length === 0) {
-    alert('请选择 PDF 文件！')
+    showError('请选择 PDF 文件！')
     return
   }
   
@@ -51,7 +62,7 @@ const removePdfFile = (index: number) => {
 // 合并 PDF
 const mergePdfs = async () => {
   if (pdfMergeState.files.length < 2) {
-    alert('请至少选择两个 PDF 文件！')
+    showError('请至少选择两个 PDF 文件！')
     return
   }
   
@@ -71,11 +82,10 @@ const mergePdfs = async () => {
     const blob = new Blob([pdfBytes], { type: 'application/pdf' })
     
     downloadFile(blob, 'merged.pdf')
-    
-    alert('PDF 合并成功！')
+    showSuccess('PDF 合并成功！')
   } catch (error) {
     console.error('PDF 合并失败：', error)
-    alert('PDF 合并失败，请检查文件是否损坏。')
+    showError('PDF 合并失败，请检查文件是否损坏。')
   } finally {
     isProcessing.value = false
   }
@@ -95,6 +105,12 @@ useSeoMeta({
       <h1 class="text-3xl font-bold text-gray-900 mb-2">PDF 合并工具</h1>
       <p class="text-gray-500">将多个 PDF 文件合并为一个文件，支持调整顺序。</p>
     </div>
+      <ToolFeedback
+        :error="errorMessage"
+        :success="successMessage"
+        @close-error="errorMessage = ''"
+        @close-success="successMessage = ''"
+      />
       
       <!-- 文件输入框 -->
       <input 
@@ -104,7 +120,7 @@ useSeoMeta({
         class="hidden" 
         accept="application/pdf"
         multiple
-        @change="(e: any) => !isProcessing && handlePdfFileSelect(e.target.files)"
+        @change="(e) => handleInputChange(e, handlePdfFileSelect)"
       />
       
       <!-- 拖拽上传区域 -->

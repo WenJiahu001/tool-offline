@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { marked } from 'marked'
 import hljs from 'highlight.js'
-import { Download, Copy, FileText, Eye, Code, Columns, Maximize2 } from 'lucide-vue-next'
+import { Download, Copy, FileText, Eye, Code, Columns } from 'lucide-vue-next'
+import { markdownExportStyles, sanitizeHtml } from '~/utils/markdown'
 
 // 配置 marked
 marked.setOptions({
@@ -63,7 +64,7 @@ const viewMode = ref<'edit' | 'preview' | 'split'>('split')
 // 渲染后的 HTML
 const renderedHtml = computed(() => {
   try {
-    return marked(markdownContent.value) as string
+    return sanitizeHtml(marked(markdownContent.value) as string)
   } catch {
     return '<p style="color: red;">渲染错误</p>'
   }
@@ -114,6 +115,7 @@ const downloadMarkdown = () => {
 
 // 下载为 HTML 文件
 const downloadHtml = () => {
+  const safeHtml = sanitizeHtml(renderedHtml.value)
   const htmlContent = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -121,26 +123,11 @@ const downloadHtml = () => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Markdown Document</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 2rem; line-height: 1.7; color: #1a1a1a; }
-    h1, h2, h3, h4, h5, h6 { margin-top: 1.5em; margin-bottom: 0.5em; font-weight: 600; }
-    h1 { font-size: 2em; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
-    h2 { font-size: 1.5em; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
-    code { background: #f5f5f5; padding: 0.2em 0.4em; border-radius: 3px; font-size: 0.9em; }
-    pre { background: #f5f5f5; padding: 1em; border-radius: 6px; overflow-x: auto; }
-    pre code { background: none; padding: 0; }
-    blockquote { border-left: 4px solid #ddd; margin: 0; padding: 0.5em 1em; color: #666; }
-    table { border-collapse: collapse; width: 100%; margin: 1em 0; }
-    th, td { border: 1px solid #ddd; padding: 0.5em 1em; text-align: left; }
-    th { background: #f5f5f5; }
-    img { max-width: 100%; }
-    a { color: #0366d6; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    hr { border: none; border-top: 1px solid #eee; margin: 2em 0; }
+    ${markdownExportStyles}
   </style>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
 </head>
 <body>
-${renderedHtml.value}
+${safeHtml}
 </body>
 </html>`
   const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })

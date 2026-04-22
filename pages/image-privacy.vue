@@ -3,8 +3,24 @@ import { ref, reactive, computed } from 'vue'
 import exifr from 'exifr'
 import { Upload, Download, Shield, MapPin, Camera, Calendar, Smartphone, AlertTriangle, CheckCircle } from 'lucide-vue-next'
 
-// 使用重构后的逻辑
-const { isDragging, fileInput, handleDragOver, handleDragLeave, handleDrop, triggerUpload } = useFileUpload()
+const {
+  errorMessage,
+  successMessage,
+  showError,
+  showSuccess,
+} = useToolFeedback()
+
+const previewUrls = useObjectUrlMap()
+
+// 处理状态
+const isProcessing = ref(false)
+
+const { isDragging, fileInput, handleDragOver, handleDragLeave, handleDrop, triggerUpload, handleInputChange } = useFileUpload({
+  accept: 'image/*',
+  multiple: true,
+  disabled: isProcessing,
+  onError: showError,
+})
 
 // 图片状态管理
 interface ImageState {
@@ -18,8 +34,7 @@ const state = reactive<{ images: ImageState[] }>({
   images: []
 })
 
-// 处理状态
-const isProcessing = ref(false)
+const getPreviewKey = (index: number) => `original-${index}`
 
 // 格式化 GPS 坐标
 const formatGPS = (lat: number, lng: number) => {
@@ -133,7 +148,7 @@ const handleFileSelect = async (files: FileList | File[]) => {
   const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'))
   
   if (imageFiles.length === 0) {
-    alert('请选择图片文件！')
+    showError('请选择图片文件！')
     return
   }
   
@@ -145,6 +160,11 @@ const handleFileSelect = async (files: FileList | File[]) => {
     isProcessing: true,
     cleaned: null
   }))
+
+  previewUrls.clear()
+  state.images.forEach((image, index) => {
+    previewUrls.set(getPreviewKey(index), image.original)
+  })
   
   for (let i = 0; i < state.images.length; i++) {
     const image = state.images[i]
@@ -158,6 +178,7 @@ const handleFileSelect = async (files: FileList | File[]) => {
 const cleanImage = (imageData: ImageState): Promise<Blob | null> => {
   return new Promise((resolve) => {
     const img = new Image()
+    const url = URL.createObjectURL(imageData.original)
     img.onload = () => {
       const canvas = document.createElement('canvas')
       canvas.width = img.naturalWidth
@@ -166,13 +187,19 @@ const cleanImage = (imageData: ImageState): Promise<Blob | null> => {
       if (ctx) {
         ctx.drawImage(img, 0, 0)
         canvas.toBlob((blob) => {
+          URL.revokeObjectURL(url)
           resolve(blob)
         }, 'image/jpeg', 0.95)
       } else {
+        URL.revokeObjectURL(url)
         resolve(null)
       }
     }
-    img.src = URL.createObjectURL(imageData.original)
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      resolve(null)
+    }
+    img.src = url
   })
 }
 
@@ -187,6 +214,7 @@ const downloadCleanedImage = async (imageIndex: number) => {
     if (cleanedBlob) {
       const originalName = image.original.name.replace(/\.[^/.]+$/, '')
       downloadFile(cleanedBlob, `${originalName}_cleaned.jpg`)
+      showSuccess(`已清除并下载：${image.original.name}`)
     }
   } finally {
     image.isProcessing = false
@@ -202,6 +230,7 @@ const downloadAllCleanedImages = async () => {
   }
   
   isProcessing.value = false
+  showSuccess('浏览器将依次触发多张图片下载')
 }
 
 const stats = computed(() => {
@@ -224,6 +253,12 @@ useSeoMeta({
       <h1 class="text-3xl font-bold text-gray-900 mb-2">图片隐私信息清除</h1>
       <p class="text-gray-500">上传图片查看隐私信息，一键清除后安全下载。</p>
     </div>
+    <ToolFeedback
+      :error="errorMessage"
+      :success="successMessage"
+      @close-error="errorMessage = ''"
+      @close-success="successMessage = ''"
+    />
     
     <!-- 文件输入框 -->
     <input 
@@ -233,7 +268,7 @@ useSeoMeta({
       class="hidden" 
       accept="image/*"
       multiple
-      @change="(e: any) => !isProcessing && handleFileSelect(e.target.files)"
+      @change="(e) => handleInputChange(e, handleFileSelect)"
     />
     
     <!-- 拖拽上传区域 -->
@@ -311,7 +346,7 @@ useSeoMeta({
               <!-- 图片预览 -->
               <div class="shrink-0">
                 <img 
-                  :src="createImageUrl(image.original)" 
+                  :src="previewUrls.get(getPreviewKey(index))" 
                   alt="图片预览" 
                   class="w-48 h-48 object-cover rounded-lg shadow-sm bg-gray-100"
                 />

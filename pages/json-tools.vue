@@ -1,9 +1,21 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import { Copy, Check, FileJson, Minimize2, Maximize2, Code, ArrowRightLeft, Wrench, ChevronDown, ChevronRight, AlertCircle, CheckCircle, Upload, Download, X } from 'lucide-vue-next'
+import { ref } from 'vue'
+import { Copy, Check, FileJson, Minimize2, Maximize2, Code, ArrowRightLeft, Wrench, Upload, Download } from 'lucide-vue-next'
+import { compareJsonObjects, formatJsonValue, tryParseJson } from '~/utils/json-tools'
 
-// 使用重构后的逻辑
-const { isDragging, fileInput, handleDragOver, handleDragLeave, handleDrop, triggerUpload } = useFileUpload()
+const {
+  errorMessage,
+  successMessage,
+  clearMessages,
+  showError,
+  showSuccess,
+} = useToolFeedback()
+
+const { isDragging, fileInput, handleDragOver, handleDragLeave, handleDrop, triggerUpload, handleInputChange } = useFileUpload({
+  accept: ['application/json', 'text/plain', '.json', '.txt'],
+  multiple: false,
+  onError: showError,
+})
 
 // 当前模式
 const activeMode = ref<'format' | 'compare'>('format') // format, compare
@@ -17,29 +29,11 @@ const compareJson = ref('')
 // 输出
 const outputJson = ref('')
 
-// 错误信息
-const errorMessage = ref('')
-
-// 成功信息
-const successMessage = ref('')
-
 // 复制状态
 const copied = ref(false)
 
 // 缩进空格数
 const indentSize = ref(2)
-
-// 清除消息
-const clearMessages = () => {
-  errorMessage.value = ''
-  successMessage.value = ''
-}
-
-// 显示成功消息
-const showSuccess = (msg: string) => {
-  successMessage.value = msg
-  errorMessage.value = ''
-}
 
 // 处理文件上传/拖拽
 const handleFileSelect = async (files: FileList | File[]) => {
@@ -49,7 +43,7 @@ const handleFileSelect = async (files: FileList | File[]) => {
     f.type === 'text/plain'
   )
   if (!file) {
-    errorMessage.value = '请选择 JSON 或文本文件'
+    showError('请选择 JSON 或文本文件')
     return
   }
 
@@ -57,56 +51,8 @@ const handleFileSelect = async (files: FileList | File[]) => {
     const text = await file.text()
     inputJson.value = text
     formatJson()
-  } catch (e) {
-    errorMessage.value = '文件读取失败'
-  }
-}
-
-// 智能 JSON 修复
-const smartFix = (jsonStr: string) => {
-  let fixed = jsonStr.trim()
-  
-  // 移除 JavaScript 风格的注释
-  fixed = fixed.replace(/\/\/.*$/gm, '')
-  fixed = fixed.replace(/\/\*[\s\S]*?\*\//g, '')
-  
-  // 修复单引号为双引号
-  fixed = fixed.replace(/'/g, '"')
-  
-  // 修复没有引号的键名
-  fixed = fixed.replace(/(\{|\,)\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":')
-  
-  // 修复尾部逗号
-  fixed = fixed.replace(/,\s*([\}\]])/g, '$1')
-  
-  // 修复 undefined 为 null
-  fixed = fixed.replace(/:\s*undefined/g, ': null')
-  
-  // 修复 NaN 为 null
-  fixed = fixed.replace(/:\s*NaN/g, ': null')
-  
-  // 修复 Infinity
-  fixed = fixed.replace(/:\s*Infinity/g, ': null')
-  fixed = fixed.replace(/:\s*-Infinity/g, ': null')
-  
-  return fixed
-}
-
-// 尝试解析 JSON（带智能修复）
-const tryParseJson = (jsonStr: string, autoFix = false) => {
-  try {
-    return { success: true, data: JSON.parse(jsonStr), fixed: false }
-  } catch (e: any) {
-    if (autoFix) {
-      try {
-        const fixed = smartFix(jsonStr)
-        const data = JSON.parse(fixed)
-        return { success: true, data, fixed: true, fixedStr: fixed }
-      } catch (e2: any) {
-        return { success: false, error: e2.message }
-      }
-    }
-    return { success: false, error: e.message }
+  } catch {
+    showError('文件读取失败')
   }
 }
 
@@ -114,7 +60,7 @@ const tryParseJson = (jsonStr: string, autoFix = false) => {
 const formatJson = () => {
   clearMessages()
   if (!inputJson.value.trim()) {
-    errorMessage.value = '请输入 JSON 内容'
+    showError('请输入 JSON 内容')
     return
   }
   
@@ -127,7 +73,7 @@ const formatJson = () => {
       showSuccess('格式化成功')
     }
   } else {
-    errorMessage.value = `JSON 解析错误: ${result.error}`
+    showError(`JSON 解析错误: ${result.error}`)
   }
 }
 
@@ -135,7 +81,7 @@ const formatJson = () => {
 const compressJson = () => {
   clearMessages()
   if (!inputJson.value.trim()) {
-    errorMessage.value = '请输入 JSON 内容'
+    showError('请输入 JSON 内容')
     return
   }
   
@@ -144,7 +90,7 @@ const compressJson = () => {
     outputJson.value = JSON.stringify(result.data)
     showSuccess('压缩成功')
   } else {
-    errorMessage.value = `JSON 解析错误: ${result.error}`
+    showError(`JSON 解析错误: ${result.error}`)
   }
 }
 
@@ -152,7 +98,7 @@ const compressJson = () => {
 const escapeJson = () => {
   clearMessages()
   if (!inputJson.value.trim()) {
-    errorMessage.value = '请输入 JSON 内容'
+    showError('请输入 JSON 内容')
     return
   }
   
@@ -173,7 +119,7 @@ const escapeJson = () => {
 const unescapeJson = () => {
   clearMessages()
   if (!inputJson.value.trim()) {
-    errorMessage.value = '请输入转义后的 JSON 字符串'
+    showError('请输入转义后的 JSON 字符串')
     return
   }
   
@@ -193,8 +139,8 @@ const unescapeJson = () => {
       outputJson.value = JSON.stringify(unescaped, null, indentSize.value)
     }
     showSuccess('去除转义成功')
-  } catch (e: any) {
-    errorMessage.value = `解析错误: ${e.message}`
+  } catch (error) {
+    showError(`解析错误: ${(error as Error).message}`)
   }
 }
 
@@ -202,7 +148,7 @@ const unescapeJson = () => {
 const fixJson = () => {
   clearMessages()
   if (!inputJson.value.trim()) {
-    errorMessage.value = '请输入需要修复的 JSON 内容'
+    showError('请输入需要修复的 JSON 内容')
     return
   }
   
@@ -215,7 +161,7 @@ const fixJson = () => {
       showSuccess('JSON 格式正确，无需修复')
     }
   } else {
-    errorMessage.value = `无法修复的错误: ${result.error}`
+    showError(`无法修复的错误: ${result.error}`)
   }
 }
 
@@ -236,8 +182,8 @@ const copyOutput = async () => {
     setTimeout(() => {
       copied.value = false
     }, 2000)
-  } catch (e) {
-    errorMessage.value = '复制失败'
+  } catch {
+    showError('复制失败')
   }
 }
 
@@ -258,13 +204,13 @@ const clearAll = () => {
 }
 
 // JSON 差异对比
-const diffResult = ref<any[] | null>(null)
+const diffResult = ref<ReturnType<typeof compareJsonObjects> | null>(null)
 
 const compareJsons = () => {
   clearMessages()
   
   if (!inputJson.value.trim() || !compareJson.value.trim()) {
-    errorMessage.value = '请在两侧都输入 JSON 内容'
+    showError('请在两侧都输入 JSON 内容')
     return
   }
   
@@ -272,17 +218,16 @@ const compareJsons = () => {
   const right = tryParseJson(compareJson.value, true)
   
   if (!left.success) {
-    errorMessage.value = `左侧 JSON 错误: ${left.error}`
+    showError(`左侧 JSON 错误: ${left.error}`)
     return
   }
   
   if (!right.success) {
-    errorMessage.value = `右侧 JSON 错误: ${right.error}`
+    showError(`右侧 JSON 错误: ${right.error}`)
     return
   }
   
-  // 递归对比
-  const diff = compareObjects(left.data, right.data, '')
+  const diff = compareJsonObjects(left.data, right.data, '')
   diffResult.value = diff
   
   if (diff.length === 0) {
@@ -290,73 +235,6 @@ const compareJsons = () => {
   } else {
     showSuccess(`发现 ${diff.length} 处差异`)
   }
-}
-
-// 递归对比对象
-const compareObjects = (obj1: any, obj2: any, path: string) => {
-  const diffs: any[] = []
-  
-  const type1 = getType(obj1)
-  const type2 = getType(obj2)
-  
-  if (type1 !== type2) {
-    diffs.push({
-      path: path || '(root)',
-      type: 'type_change',
-      left: { type: type1, value: obj1 },
-      right: { type: type2, value: obj2 }
-    })
-    return diffs
-  }
-  
-  if (type1 === 'object') {
-    const allKeys = new Set([...Object.keys(obj1), ...Object.keys(obj2)])
-    for (const key of allKeys) {
-      const newPath = path ? `${path}.${key}` : key
-      if (!(key in obj1)) {
-        diffs.push({ path: newPath, type: 'added', right: obj2[key] })
-      } else if (!(key in obj2)) {
-        diffs.push({ path: newPath, type: 'removed', left: obj1[key] })
-      } else {
-        diffs.push(...compareObjects(obj1[key], obj2[key], newPath))
-      }
-    }
-  } else if (type1 === 'array') {
-    const maxLen = Math.max(obj1.length, obj2.length)
-    for (let i = 0; i < maxLen; i++) {
-      const newPath = `${path}[${i}]`
-      if (i >= obj1.length) {
-        diffs.push({ path: newPath, type: 'added', right: obj2[i] })
-      } else if (i >= obj2.length) {
-        diffs.push({ path: newPath, type: 'removed', left: obj1[i] })
-      } else {
-        diffs.push(...compareObjects(obj1[i], obj2[i], newPath))
-      }
-    }
-  } else if (obj1 !== obj2) {
-    diffs.push({
-      path: path || '(root)',
-      type: 'value_change',
-      left: obj1,
-      right: obj2
-    })
-  }
-  
-  return diffs
-}
-
-const getType = (val: any) => {
-  if (val === null) return 'null'
-  if (Array.isArray(val)) return 'array'
-  return typeof val
-}
-
-// 格式化显示值
-const formatValue = (val: any) => {
-  if (typeof val === 'object') {
-    return JSON.stringify(val)
-  }
-  return String(val)
 }
 
 useSeoMeta({
@@ -402,20 +280,12 @@ useSeoMeta({
     </div>
     
     <!-- 消息提示 -->
-    <div v-if="errorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700 text-sm">
-      <AlertCircle class="w-4 h-4 shrink-0" />
-      <span class="flex-1">{{ errorMessage }}</span>
-      <button @click="errorMessage = ''" class="p-0.5 hover:bg-red-100 rounded transition-colors">
-        <X class="w-4 h-4" />
-      </button>
-    </div>
-    <div v-if="successMessage" class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-700 text-sm">
-      <CheckCircle class="w-4 h-4 shrink-0" />
-      <span class="flex-1">{{ successMessage }}</span>
-      <button @click="successMessage = ''" class="p-0.5 hover:bg-green-100 rounded transition-colors">
-        <X class="w-4 h-4" />
-      </button>
-    </div>
+    <ToolFeedback
+      :error="errorMessage"
+      :success="successMessage"
+      @close-error="errorMessage = ''"
+      @close-success="successMessage = ''"
+    />
     
     <!-- 格式化/转义模式 -->
     <div v-if="activeMode === 'format'" class="space-y-4">
@@ -506,7 +376,7 @@ useSeoMeta({
                 ref="fileInput" 
                 class="hidden" 
                 accept=".json,.txt"
-                @change="(e: any) => handleFileSelect(e.target.files)"
+                @change="(e) => handleInputChange(e, handleFileSelect)"
               />
             </div>
             <span class="text-xs text-gray-400">{{ inputJson.length }} 字符</span>
@@ -647,10 +517,10 @@ useSeoMeta({
                   </span>
                 </td>
                 <td class="px-4 py-2 font-mono text-xs max-w-[200px] truncate" :class="diff.type === 'removed' ? 'text-red-600 bg-red-50' : 'text-gray-600'">
-                  {{ diff.type === 'added' ? '-' : formatValue(diff.left?.value ?? diff.left) }}
+                  {{ diff.type === 'added' ? '-' : formatJsonValue(diff.left?.value ?? diff.left) }}
                 </td>
                 <td class="px-4 py-2 font-mono text-xs max-w-[200px] truncate" :class="diff.type === 'added' ? 'text-green-600 bg-green-50' : 'text-gray-600'">
-                  {{ diff.type === 'removed' ? '-' : formatValue(diff.right?.value ?? diff.right) }}
+                  {{ diff.type === 'removed' ? '-' : formatJsonValue(diff.right?.value ?? diff.right) }}
                 </td>
               </tr>
             </tbody>

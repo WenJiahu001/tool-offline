@@ -16,7 +16,7 @@ export interface ToolCategory {
   tools: Tool[]
 }
 
-const tools: Tool[] = [
+export const tools: Tool[] = [
   {
     name: '图片压缩',
     description: '高效压缩 PNG/JPG 图片，智能平衡画质与体积，支持批量处理。',

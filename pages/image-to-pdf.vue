@@ -3,27 +3,50 @@ import { ref, reactive } from 'vue'
 import { PDFDocument } from 'pdf-lib'
 import { Upload, Download, MoveUp, MoveDown, Trash2 } from 'lucide-vue-next'
 
-// 使用重构后的逻辑
-const { isDragging, fileInput, handleDragOver, handleDragLeave, handleDrop, triggerUpload } = useFileUpload()
-
 // 处理状态
 const isProcessing = ref(false)
+
+const {
+  errorMessage,
+  successMessage,
+  showError,
+  showSuccess,
+} = useToolFeedback()
+
+const previewUrls = useObjectUrlMap()
+
+const { isDragging, fileInput, handleDragOver, handleDragLeave, handleDrop, triggerUpload, handleInputChange } = useFileUpload({
+  accept: 'image/*',
+  multiple: true,
+  disabled: isProcessing,
+  onError: showError,
+})
 
 // 图片转 PDF 状态
 const imageToPdfState = reactive<{ files: File[] }>({
   files: []
 })
 
+const getPreviewKey = (index: number) => `preview-${index}`
+
+const syncPreviewUrls = () => {
+  previewUrls.clear()
+  imageToPdfState.files.forEach((file, index) => {
+    previewUrls.set(getPreviewKey(index), file)
+  })
+}
+
 // 处理图片文件选择
 const handleImageFileSelect = (files: FileList | File[]) => {
   const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'))
   
   if (imageFiles.length === 0) {
-    alert('请选择图片文件！')
+    showError('请选择图片文件！')
     return
   }
   
   imageToPdfState.files = [...imageToPdfState.files, ...imageFiles]
+  syncPreviewUrls()
 }
 
 // 调整图片顺序
@@ -32,6 +55,7 @@ const moveImageUp = (index: number) => {
     const temp = imageToPdfState.files[index]
     imageToPdfState.files[index] = imageToPdfState.files[index - 1]
     imageToPdfState.files[index - 1] = temp
+    syncPreviewUrls()
   }
 }
 
@@ -40,18 +64,20 @@ const moveImageDown = (index: number) => {
     const temp = imageToPdfState.files[index]
     imageToPdfState.files[index] = imageToPdfState.files[index + 1]
     imageToPdfState.files[index + 1] = temp
+    syncPreviewUrls()
   }
 }
 
 // 删除图片文件
 const removeImageFile = (index: number) => {
   imageToPdfState.files.splice(index, 1)
+  syncPreviewUrls()
 }
 
 // 图片转 PDF
 const imagesToPdf = async () => {
   if (imageToPdfState.files.length === 0) {
-    alert('请选择图片文件！')
+    showError('请选择图片文件！')
     return
   }
   
@@ -84,11 +110,10 @@ const imagesToPdf = async () => {
     const blob = new Blob([pdfBytes], { type: 'application/pdf' })
     
     downloadFile(blob, 'images_to_pdf.pdf')
-    
-    alert('图片转 PDF 成功！')
+    showSuccess('图片转 PDF 成功！')
   } catch (error) {
     console.error('图片转 PDF 失败：', error)
-    alert('图片转 PDF 失败，请检查文件是否损坏。')
+    showError('图片转 PDF 失败，请检查文件是否损坏。')
   } finally {
     isProcessing.value = false
   }
@@ -108,6 +133,12 @@ useSeoMeta({
       <h1 class="text-3xl font-bold text-gray-900 mb-2">图片合并为 PDF</h1>
       <p class="text-gray-500">将多张图片按顺序合并为一个 PDF 文档。</p>
     </div>
+      <ToolFeedback
+        :error="errorMessage"
+        :success="successMessage"
+        @close-error="errorMessage = ''"
+        @close-success="successMessage = ''"
+      />
       
       <!-- 文件输入框 -->
       <input 
@@ -117,7 +148,7 @@ useSeoMeta({
         class="hidden" 
         accept="image/*"
         multiple
-        @change="(e: any) => !isProcessing && handleImageFileSelect(e.target.files)"
+        @change="(e) => handleInputChange(e, handleImageFileSelect)"
       />
       
       <!-- 拖拽上传区域 -->
@@ -159,7 +190,7 @@ useSeoMeta({
             <!-- 图片预览 -->
             <div class="relative shrink-0">
               <img 
-                :src="createImageUrl(file)" 
+                :src="previewUrls.get(getPreviewKey(index))" 
                 alt="预览" 
                 class="w-8 h-8 object-cover rounded shadow-sm border border-gray-100"
               />

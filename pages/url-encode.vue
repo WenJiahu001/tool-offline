@@ -1,8 +1,20 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Copy, Check, ArrowRightLeft, RotateCcw, Link, Unlink, AlertCircle, CheckCircle, X, Upload, Download } from 'lucide-vue-next'
+import { Copy, Check, ArrowRightLeft, RotateCcw, Link, Unlink, Upload, Download } from 'lucide-vue-next'
 
-const { isDragging, fileInput, handleDragOver, handleDragLeave, handleDrop, triggerUpload } = useFileUpload()
+const {
+  errorMessage,
+  successMessage,
+  clearMessages,
+  showError,
+  showSuccess,
+} = useToolFeedback()
+
+const { isDragging, fileInput, handleDragOver, handleDragLeave, handleDrop, triggerUpload, handleInputChange } = useFileUpload({
+  accept: ['text/plain', '.txt', '.url', '.text'],
+  multiple: false,
+  onError: showError,
+})
 
 // 当前模式
 const activeMode = ref<'encode' | 'decode' | 'parse'>('encode')
@@ -14,26 +26,20 @@ const outputText = ref('')
 // 编码选项
 const encodeComponent = ref(false) // true = encodeURIComponent, false = encodeURI
 
-// 消息
-const errorMessage = ref('')
-const successMessage = ref('')
-
 // 复制状态
 const copied = ref(false)
 
 // URL 解析结果
-const parseResult = ref<any>(null)
-
-// 清除消息
-const clearMessages = () => {
-  errorMessage.value = ''
-  successMessage.value = ''
-}
-
-const showSuccess = (msg: string) => {
-  successMessage.value = msg
-  errorMessage.value = ''
-}
+const parseResult = ref<{
+  protocol: string
+  hostname: string
+  port: string
+  pathname: string
+  hash: string
+  origin: string
+  search: string
+  params: { key: string; value: string; encoded: string }[]
+} | null>(null)
 
 // URL 编码
 const encodeUrl = () => {
@@ -47,8 +53,8 @@ const encodeUrl = () => {
       ? encodeURIComponent(inputText.value)
       : encodeURI(inputText.value)
     showSuccess('编码成功')
-  } catch (e: any) {
-    errorMessage.value = `编码失败: ${e.message}`
+  } catch (error) {
+    showError(`编码失败: ${(error as Error).message}`)
   }
 }
 
@@ -62,8 +68,8 @@ const decodeUrl = () => {
   try {
     outputText.value = decodeURIComponent(inputText.value)
     showSuccess('解码成功')
-  } catch (e: any) {
-    errorMessage.value = `解码失败: 输入内容不是有效的编码格式`
+  } catch {
+    showError('解码失败: 输入内容不是有效的编码格式')
   }
 }
 
@@ -111,8 +117,8 @@ const parseUrl = () => {
     })
 
     showSuccess('URL 解析成功')
-  } catch (e: any) {
-    errorMessage.value = 'URL 格式不合法，请检查输入'
+  } catch {
+    showError('URL 格式不合法，请检查输入')
     parseResult.value = null
   }
 }
@@ -129,13 +135,14 @@ const swapDirection = () => {
 
 // 复制输出
 const copyOutput = async () => {
-  if (!outputText.value) return
+  const content = outputText.value || parseResult.value?.params.map(param => param.encoded).join('\n')
+  if (!content) return
   try {
-    await navigator.clipboard.writeText(outputText.value)
+    await navigator.clipboard.writeText(content)
     copied.value = true
     setTimeout(() => { copied.value = false }, 2000)
-  } catch (e) {
-    errorMessage.value = '复制失败'
+  } catch {
+    showError('复制失败')
   }
 }
 
@@ -161,15 +168,15 @@ const handleFileSelect = async (files: FileList | File[]) => {
     f.type === 'text/plain' || f.name.endsWith('.txt') || f.name.endsWith('.url')
   )
   if (!file) {
-    errorMessage.value = '请选择文本文件'
+    showError('请选择文本文件')
     return
   }
   try {
     const text = await file.text()
     inputText.value = text
     clearMessages()
-  } catch (e) {
-    errorMessage.value = '文件读取失败'
+  } catch {
+    showError('文件读取失败')
   }
 }
 
@@ -246,20 +253,12 @@ useSeoMeta({
     </div>
 
     <!-- 消息提示 -->
-    <div v-if="errorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700 text-sm">
-      <AlertCircle class="w-4 h-4 shrink-0" />
-      <span class="flex-1">{{ errorMessage }}</span>
-      <button @click="errorMessage = ''" class="p-0.5 hover:bg-red-100 rounded transition-colors">
-        <X class="w-4 h-4" />
-      </button>
-    </div>
-    <div v-if="successMessage" class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-700 text-sm">
-      <CheckCircle class="w-4 h-4 shrink-0" />
-      <span class="flex-1">{{ successMessage }}</span>
-      <button @click="successMessage = ''" class="p-0.5 hover:bg-green-100 rounded transition-colors">
-        <X class="w-4 h-4" />
-      </button>
-    </div>
+    <ToolFeedback
+      :error="errorMessage"
+      :success="successMessage"
+      @close-error="errorMessage = ''"
+      @close-success="successMessage = ''"
+    />
 
     <!-- 编码/解码模式 -->
     <div v-if="activeMode === 'encode' || activeMode === 'decode'" class="space-y-4">
@@ -356,7 +355,7 @@ useSeoMeta({
                 ref="fileInput"
                 class="hidden"
                 accept=".txt,.url,.text"
-                @change="(e: any) => handleFileSelect(e.target.files)"
+                @change="(e) => handleInputChange(e, handleFileSelect)"
               />
             </div>
             <span class="text-xs text-gray-400">{{ inputText.length }} 字符</span>

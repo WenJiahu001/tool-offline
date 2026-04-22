@@ -17,11 +17,24 @@ const state = reactive<{ images: CompressedImage[] }>({
   images: []
 })
 
-// 使用重构后的文件上传逻辑
-const { isDragging, fileInput, handleDragOver, handleDragLeave, handleDrop, triggerUpload } = useFileUpload()
+const {
+  errorMessage,
+  successMessage,
+  showError,
+  showSuccess,
+} = useToolFeedback()
+
+const previewUrls = useObjectUrlMap()
 
 // 压缩状态
 const isCompressing = ref(false)
+
+const { isDragging, fileInput, handleDragOver, handleDragLeave, handleDrop, triggerUpload, handleInputChange } = useFileUpload({
+  accept: 'image/*',
+  multiple: true,
+  disabled: isCompressing,
+  onError: showError,
+})
 
 // 压缩配置
 const compressionOptions = reactive({
@@ -32,12 +45,23 @@ const compressionOptions = reactive({
   resolutionMode: 'custom' as 'original' | 'custom'
 })
 
+const getOriginalPreviewKey = (index: number) => `original-${index}`
+const getCompressedPreviewKey = (index: number) => `compressed-${index}`
+
+const syncPreviewUrls = () => {
+  previewUrls.clear()
+  state.images.forEach((image, index) => {
+    previewUrls.set(getOriginalPreviewKey(index), image.original)
+    previewUrls.set(getCompressedPreviewKey(index), image.compressed)
+  })
+}
+
 // 处理文件选择
 const handleFileSelect = (files: FileList | File[]) => {
   const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'))
   
   if (imageFiles.length === 0) {
-    alert('请选择图片文件！')
+    showError('请选择图片文件！')
     return
   }
   
@@ -49,6 +73,8 @@ const handleFileSelect = (files: FileList | File[]) => {
     compressionRatio: 0,
     isCompressing: false
   }))
+
+  syncPreviewUrls()
   
   compressImages()
 }
@@ -75,6 +101,7 @@ const compressImage = async (imageIndex: number) => {
     
     // 将压缩后的文件对象存回响应式数据，触发界面更新
     image.compressed = compressedFile
+    previewUrls.set(getCompressedPreviewKey(imageIndex), compressedFile)
     
     // 记录压缩后文件的字节大小，用于显示
     image.compressedSize = compressedFile.size
@@ -83,6 +110,7 @@ const compressImage = async (imageIndex: number) => {
     image.compressionRatio = Math.round((1 - image.compressedSize / image.originalSize) * 100)
   } catch (error) {
     console.error('压缩失败：', error)
+    showError(`图片压缩失败：${image.original.name}`)
   } finally {
     image.isCompressing = false
   }
@@ -97,6 +125,7 @@ const compressImages = async () => {
   }
   
   isCompressing.value = false
+  showSuccess(`已完成 ${state.images.length} 张图片压缩`)
 }
 
 // 下载单张压缩图片
@@ -112,7 +141,7 @@ const downloadAllCompressedImages = () => {
   const compressedImages = state.images.filter(image => image.compressed)
   
   if (compressedImages.length === 0) {
-    alert('没有可下载的压缩图片！')
+    showError('没有可下载的压缩图片！')
     return
   }
   
@@ -123,6 +152,7 @@ const downloadAllCompressedImages = () => {
       }
     }, index * 100)
   })
+  showSuccess('浏览器将依次触发多张图片下载')
 }
 
 useSeoMeta({
@@ -138,6 +168,12 @@ useSeoMeta({
       <h1 class="text-3xl font-bold text-gray-900 mb-2">图片压缩工具</h1>
       <p class="text-gray-500">高效压缩 PNG/JPG 图片，智能平衡画质与体积。</p>
     </div>
+    <ToolFeedback
+      :error="errorMessage"
+      :success="successMessage"
+      @close-error="errorMessage = ''"
+      @close-success="successMessage = ''"
+    />
       
     <!-- 压缩参数设置 -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
@@ -235,7 +271,7 @@ useSeoMeta({
         class="hidden" 
         accept="image/*"
         multiple
-        @change="(e: any) => !isCompressing && handleFileSelect(e.target.files)"
+        @change="(e) => handleInputChange(e, handleFileSelect)"
       />
       
       <!-- 拖拽上传区域 -->
@@ -297,8 +333,8 @@ useSeoMeta({
              <div class="grid grid-cols-2 divide-x divide-gray-100">
                <!-- 左侧原图 -->
                <div class="p-6 flex flex-col items-center justify-center bg-gray-50/30">
-                 <img 
-                   :src="createImageUrl(image.original)" 
+                   <img 
+                   :src="previewUrls.get(getOriginalPreviewKey(index))" 
                    alt="原图" 
                    class="max-h-64 max-w-full object-contain rounded shadow-sm mb-3 bg-white"
                  />
@@ -315,7 +351,7 @@ useSeoMeta({
                  </div>
                  <template v-else>
                    <img 
-                     :src="createImageUrl(image.compressed)" 
+                     :src="previewUrls.get(getCompressedPreviewKey(index))" 
                      alt="压缩后图片" 
                      class="max-h-64 max-w-full object-contain rounded shadow-sm mb-3 bg-white"
                    />
