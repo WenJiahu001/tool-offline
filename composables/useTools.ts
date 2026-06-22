@@ -127,14 +127,47 @@ export const tools: Tool[] = [
     hoverColor: 'group-hover:text-cyan-600',
     icon: 'qrcode',
   },
+  {
+    name: 'Base64 编解码',
+    description: '支持文本和文件与 Base64 格式的互相转换，支持中文字符无乱码。',
+    route: '/base64-converter',
+    category: '开发工具',
+    gradient: 'from-sky-500 to-blue-600',
+    iconBg: 'bg-sky-50',
+    iconColor: 'text-sky-600',
+    hoverColor: 'group-hover:text-sky-600',
+    icon: 'binary',
+  },
+  {
+    name: 'JWT 解析器',
+    description: '本地解析 JSON Web Token (JWT)，高亮美化 Header、Payload 及签名，支持过期时间计算。',
+    route: '/jwt-decoder',
+    category: '开发工具',
+    gradient: 'from-indigo-500 to-purple-600',
+    iconBg: 'bg-indigo-50',
+    iconColor: 'text-indigo-600',
+    hoverColor: 'group-hover:text-indigo-600',
+    icon: 'key',
+  },
+  {
+    name: '时间戳转换',
+    description: 'Unix 时间戳与本地时间双向转换，支持毫秒级、相对时间计算和快捷偏移计算。',
+    route: '/timestamp-converter',
+    category: '开发工具',
+    gradient: 'from-blue-600 to-cyan-500',
+    iconBg: 'bg-blue-50',
+    iconColor: 'text-blue-600',
+    hoverColor: 'group-hover:text-blue-600',
+    icon: 'clock',
+  },
 ]
 
-const categoryOrder = ['图片工具', 'PDF 工具', '开发工具', '实用工具']
+const categoryOrder = ['开发工具', '图片工具', 'PDF 工具', '实用工具']
 
 const categoryMeta: Record<string, { icon: string; description: string }> = {
+  '开发工具': { icon: 'code', description: 'JSON、URL、Markdown 处理' },
   '图片工具': { icon: 'image', description: '压缩、裁剪、格式转换、隐私清除' },
   'PDF 工具': { icon: 'pdf', description: '合并、转换 PDF 文档' },
-  '开发工具': { icon: 'code', description: 'JSON、URL、Markdown 处理' },
   '实用工具': { icon: 'utility', description: '二维码生成等日常工具' },
 }
 

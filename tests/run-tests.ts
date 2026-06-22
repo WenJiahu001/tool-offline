@@ -3,6 +3,8 @@ import assert from 'node:assert/strict'
 import { tools } from '../composables/useTools'
 import { formatFileSize } from '../utils/file'
 import { compareJsonObjects, smartFix, tryParseJson } from '../utils/json-tools'
+import { stringToBase64, base64ToString } from '../utils/base64-tools'
+import { parseJwt } from '../utils/jwt-tools'
 
 const run = () => {
   assert.equal(formatFileSize(0), '0 Bytes')
@@ -25,6 +27,29 @@ const run = () => {
   assert.ok(diff.some(item => item.path === 'nested.ok' && item.type === 'value_change'))
   assert.ok(diff.some(item => item.path === 'list[1]' && item.type === 'value_change'))
   assert.ok(diff.some(item => item.path === 'extra' && item.type === 'added'))
+
+  // Base64 中文编解码测试
+  assert.equal(stringToBase64('Hello! 开发者'), 'SGVsbG8hIOW8gOWPkeiAhQ==')
+  assert.equal(base64ToString('SGVsbG8hIOW8gOWPkeiAhQ=='), 'Hello! 开发者')
+  assert.throws(() => base64ToString('!!!非法base64!!!'))
+
+  // JWT 解析测试
+  const sampleHeaderB64 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'
+  const samplePayloadB64 = 'eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ'
+  const sampleSignature = 'SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
+  const sampleJwt = `${sampleHeaderB64}.${samplePayloadB64}.${sampleSignature}`
+
+  const jwtResult = parseJwt(sampleJwt)
+  assert.equal(jwtResult.success, true)
+  if (jwtResult.success) {
+    assert.equal(jwtResult.header.alg, 'HS256')
+    assert.equal(jwtResult.payload.name, 'John Doe')
+    assert.equal(jwtResult.signature, sampleSignature)
+  }
+
+  const badJwtResult = parseJwt('header.payload')
+  assert.equal(badJwtResult.success, false)
+  assert.match(badJwtResult.error || '', /格式错误/)
 
   const routeSet = new Set(tools.map(tool => tool.route))
   assert.equal(routeSet.size, tools.length)
