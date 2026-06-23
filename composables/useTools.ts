@@ -160,6 +160,17 @@ export const tools: Tool[] = [
     hoverColor: 'group-hover:text-blue-600',
     icon: 'clock',
   },
+  {
+    name: 'Cron 表达式助手',
+    description: '可视化配置 Cron 表达式，本地解析并预测未来执行时间，支持快捷模板。',
+    route: '/cron',
+    category: '开发工具',
+    gradient: 'from-emerald-600 to-teal-500',
+    iconBg: 'bg-emerald-50',
+    iconColor: 'text-emerald-600',
+    hoverColor: 'group-hover:text-emerald-600',
+    icon: 'clock',
+  },
 ]
 
 const categoryOrder = ['开发工具', '图片工具', 'PDF 工具', '实用工具']

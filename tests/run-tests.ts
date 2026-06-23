@@ -5,6 +5,9 @@ import { formatFileSize } from '../utils/file'
 import { compareJsonObjects, smartFix, tryParseJson } from '../utils/json-tools'
 import { stringToBase64, base64ToString } from '../utils/base64-tools'
 import { parseJwt } from '../utils/jwt-tools'
+import cronstrue from 'cronstrue'
+import 'cronstrue/locales/zh_CN'
+import { CronExpressionParser } from 'cron-parser'
 
 const run = () => {
   assert.equal(formatFileSize(0), '0 Bytes')
@@ -53,6 +56,16 @@ const run = () => {
 
   const routeSet = new Set(tools.map(tool => tool.route))
   assert.equal(routeSet.size, tools.length)
+
+  // Cron 表达式测试
+  const parsedCron = cronstrue.toString('*/5 * * * *', { locale: 'zh_CN' })
+  assert.match(parsedCron, /每隔 5 分钟/)
+
+  const interval = CronExpressionParser.parse('0 0 12 * * *')
+  const firstExecution = interval.next().toDate()
+  assert.equal(firstExecution.getHours(), 12)
+  assert.equal(firstExecution.getMinutes(), 0)
+  assert.equal(firstExecution.getSeconds(), 0)
 
   console.log('tests passed')
 }
