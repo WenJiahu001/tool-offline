@@ -193,6 +193,17 @@ export const tools: Tool[] = [
     hoverColor: 'group-hover:text-emerald-600',
     icon: 'clock',
   },
+  {
+    name: 'SQL 格式化',
+    description: '格式化、美化与压缩 SQL 语句，支持多种数据库方言与关键字大小写定制。',
+    route: '/sql-formatter',
+    category: '开发工具',
+    gradient: 'from-blue-500 to-cyan-500',
+    iconBg: 'bg-blue-50',
+    iconColor: 'text-blue-600',
+    hoverColor: 'group-hover:text-blue-600',
+    icon: 'database',
+  },
 ]
 
 const categoryOrder = ['开发工具', '图片工具', 'PDF 工具', '实用工具']
