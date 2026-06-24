@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import browserImageCompression from 'browser-image-compression'
+import { useStorage } from '@vueuse/core'
 import { Upload, Download, Info } from 'lucide-vue-next'
 
 // 图片状态管理

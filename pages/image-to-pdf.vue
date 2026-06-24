@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import { PDFDocument } from 'pdf-lib'
+
 import { Upload, Download, MoveUp, MoveDown, Trash2 } from 'lucide-vue-next'
 
 // 处理状态
@@ -84,29 +84,8 @@ const imagesToPdf = async () => {
   isProcessing.value = true
   
   try {
-    const pdfDoc = await PDFDocument.create()
-    
-    for (const file of imageToPdfState.files) {
-      const arrayBuffer = await file.arrayBuffer()
-      // 注意：pdf-lib embedPng 支持 png，如果是其他格式可能需要额外处理或使用 embedJpg
-      // 为简化重构，暂且保持原逻辑，主要进行结构重构
-      let image;
-      if (file.type === 'image/jpeg' || file.type === 'image/jpg') {
-        image = await pdfDoc.embedJpg(arrayBuffer)
-      } else {
-        image = await pdfDoc.embedPng(arrayBuffer)
-      }
-      
-      const page = pdfDoc.addPage([image.width, image.height])
-      page.drawImage(image, {
-        x: 0,
-        y: 0,
-        width: image.width,
-        height: image.height
-      })
-    }
-    
-    const pdfBytes = await pdfDoc.save()
+    const { imagesToPdf: runImagesToPdf } = usePdfWorker()
+    const pdfBytes = await runImagesToPdf(imageToPdfState.files)
     const blob = new Blob([pdfBytes], { type: 'application/pdf' })
     
     downloadFile(blob, 'images_to_pdf.pdf')
@@ -247,3 +226,4 @@ useSeoMeta({
     </div>
   </div>
 </template>
+

@@ -1,5 +1,6 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
+import { useStorage } from '@vueuse/core'
 import QRCode from 'qrcode'
 import { Download, QrCode, RefreshCw, Copy, Check } from 'lucide-vue-next'
 

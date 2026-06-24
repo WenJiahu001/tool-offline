@@ -67,6 +67,18 @@ const run = () => {
   assert.equal(firstExecution.getMinutes(), 0)
   assert.equal(firstExecution.getSeconds(), 0)
 
+    // Properties Test
+  const { parseProperties, stringifyProperties } = require('../utils/properties')
+  const propSource = 'a.b=1\na.c=2\nlist.0=hi\nlist.1=hello'
+  const parsedProp = parseProperties(propSource)
+  assert.equal(parsedProp.a.b, '1')
+  assert.equal(parsedProp.a.c, '2')
+  assert.deepEqual(parsedProp.list, ['hi', 'hello'])
+  
+  const stringifiedProp = stringifyProperties({ nested: { foo: 'bar', arr: [1, 2] }})
+  assert.match(stringifiedProp, /nested.foo=bar/)
+  assert.match(stringifiedProp, /nested.arr.0=1/)
+
   console.log('tests passed')
 }
 

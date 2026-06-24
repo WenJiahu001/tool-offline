@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, reactive } from 'vue'
+import { useStorage } from '@vueuse/core'
 import { Upload, Download, RefreshCw } from 'lucide-vue-next'
 
 interface ConvertedImage {

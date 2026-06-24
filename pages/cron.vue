@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive, watch, computed } from 'vue'
 import { Copy, Check, RotateCcw, Play, Sparkles, AlertCircle, HelpCircle, ArrowRight } from 'lucide-vue-next'
+import { useStorage } from '@vueuse/core'
 import cronstrue from 'cronstrue'
 import 'cronstrue/locales/zh_CN'
 import { CronExpressionParser } from 'cron-parser'
@@ -21,7 +22,7 @@ const {
 
 // 状态定义
 const secondsEnabled = ref(false)
-const cronExpression = ref('*/5 * * * *')
+const cronExpression = useStorage('cron-expression', '*/5 * * * *')
 const isInternalUpdate = ref(false)
 const hasError = ref(false)
 
@@ -794,3 +795,4 @@ const copyExpression = async () => {
   background: #cbd5e1;
 }
 </style>
+

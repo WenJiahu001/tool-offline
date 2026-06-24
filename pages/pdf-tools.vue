@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import { PDFDocument } from 'pdf-lib'
+
 import { Upload, Download, MoveUp, MoveDown, Trash2 } from 'lucide-vue-next'
 
 // 处理状态
@@ -69,16 +69,9 @@ const mergePdfs = async () => {
   isProcessing.value = true
   
   try {
-    const mergedPdf = await PDFDocument.create()
+    const { mergePdfs } = usePdfWorker()
+    const pdfBytes = await mergePdfs(pdfMergeState.files)
     
-    for (const file of pdfMergeState.files) {
-      const arrayBuffer = await file.arrayBuffer()
-      const pdfDoc = await PDFDocument.load(arrayBuffer)
-      const pages = await mergedPdf.copyPages(pdfDoc, pdfDoc.getPageIndices())
-      pages.forEach(page => mergedPdf.addPage(page))
-    }
-    
-    const pdfBytes = await mergedPdf.save()
     const blob = new Blob([pdfBytes], { type: 'application/pdf' })
     
     downloadFile(blob, 'merged.pdf')
@@ -219,3 +212,4 @@ useSeoMeta({
     </div>
   </div>
 </template>
+

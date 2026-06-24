@@ -1,25 +1,25 @@
 <script setup>
 import { useRoute } from 'vue-router'
+import { useDark, useToggle } from '@vueuse/core'
+import { Sun, Moon } from 'lucide-vue-next'
+
 const route = useRoute()
+
+const isDark = useDark()
+const toggleDark = useToggle(isDark)
 </script>
 
 <template>
-  <header class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 transition-all duration-300">
+  <header class="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 sticky top-0 z-50 transition-all duration-300">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between relative">
       <!-- Logo -->
       <NuxtLink to="/" class="flex items-center gap-2 group">
-        <div class="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center text-white shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-            <path d="M2 12h20" />
-          </svg>
-        </div>
-        <span class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700">LocalTools</span>
+        <img src="/icons/192x192.png" alt="Logo" class="w-8 h-8 rounded-lg shadow-sm group-hover:shadow-md transition-all duration-300 group-hover:scale-105 object-cover" />
+        <span class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300">LocalTools</span>
       </NuxtLink>
 
       <!-- 安全 Banner (居中显示) -->
-      <div class="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center gap-2 px-3 py-1 rounded-full bg-blue-50/50 border border-blue-100/50 text-blue-700 text-sm font-medium">
+      <div class="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center gap-2 px-3 py-1 rounded-full bg-blue-50/50 dark:bg-blue-900/30 border border-blue-100/50 dark:border-blue-800/50 text-blue-700 dark:text-blue-300 text-sm font-medium">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
         </svg>
@@ -28,10 +28,20 @@ const route = useRoute()
 
       <!-- 右侧导航 -->
       <nav class="flex items-center gap-4">
+        <!-- 主题切换按钮 -->
+        <button 
+          @click="toggleDark()" 
+          class="p-2 rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          :title="isDark ? '切换到浅色模式' : '切换到深色模式'"
+        >
+          <Moon v-if="!isDark" class="w-4 h-4" />
+          <Sun v-else class="w-4 h-4" />
+        </button>
+
         <NuxtLink 
           v-if="route.path !== '/'" 
           to="/" 
-          class="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-1 whitespace-nowrap"
+          class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-1 whitespace-nowrap"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />

@@ -191,6 +191,7 @@
 <script setup lang="ts">
 import { ref, reactive, watch, nextTick } from 'vue'
 import { Upload, Download, RefreshCw, ZoomIn, ZoomOut, RotateCw, RotateCcw } from 'lucide-vue-next'
+import { useStorage } from '@vueuse/core'
 import { VueCropper } from 'vue-cropper'
 import 'vue-cropper/dist/index.css'
 

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Copy, Check, FileJson, Minimize2, Maximize2, Code, ArrowRightLeft, Wrench, Upload, Download } from 'lucide-vue-next'
-import { compareJsonObjects, formatJsonValue, tryParseJson } from '~/utils/json-tools'
+import { ref, computed } from 'vue'
+import { Copy, Check, FileJson, Minimize2, Maximize2, Code, ArrowRightLeft, Wrench, Upload, Download, CheckCircle, Loader2 } from 'lucide-vue-next'
+import { formatJsonValue } from '~/utils/json-tools'
+import { useStorage, useVirtualList } from '@vueuse/core'
 
 const {
   errorMessage,
@@ -17,6 +18,9 @@ const { isDragging, fileInput, handleDragOver, handleDragLeave, handleDrop, trig
   onError: showError,
 })
 
+// Worker
+const { parseJson, compareJson: compareJsonWorker } = useJsonWorker()
+
 // 当前模式
 const activeMode = ref<'format' | 'compare'>('format') // format, compare
 
@@ -24,7 +28,7 @@ const activeMode = ref<'format' | 'compare'>('format') // format, compare
 const inputJson = ref('')
 
 // 右侧输入（用于对比）
-const compareJson = ref('')
+const compareJsonInput = ref('')
 
 // 输出
 const outputJson = ref('')
@@ -32,8 +36,11 @@ const outputJson = ref('')
 // 复制状态
 const copied = ref(false)
 
+// 处理状态
+const isProcessing = ref(false)
+
 // 缩进空格数
-const indentSize = ref(2)
+const indentSize = useStorage('json-indent-size', 2)
 
 // 处理文件上传/拖拽
 const handleFileSelect = async (files: FileList | File[]) => {
@@ -50,118 +57,149 @@ const handleFileSelect = async (files: FileList | File[]) => {
   try {
     const text = await file.text()
     inputJson.value = text
-    formatJson()
+    await formatJson()
   } catch {
     showError('文件读取失败')
   }
 }
 
 // 格式化 JSON
-const formatJson = () => {
+const formatJson = async () => {
   clearMessages()
   if (!inputJson.value.trim()) {
     showError('请输入 JSON 内容')
     return
   }
   
-  const result = tryParseJson(inputJson.value, true)
-  if (result.success) {
-    outputJson.value = JSON.stringify(result.data, null, indentSize.value)
-    if (result.fixed) {
-      showSuccess('JSON 已自动修复并格式化')
+  isProcessing.value = true
+  try {
+    const result = await parseJson(inputJson.value, true)
+    if (result.success) {
+      outputJson.value = JSON.stringify(result.data, null, indentSize.value)
+      if (result.fixed) {
+        showSuccess('JSON 已自动修复并格式化')
+      } else {
+        showSuccess('格式化成功')
+      }
     } else {
-      showSuccess('格式化成功')
+      showError(`JSON 解析错误: ${result.error}`)
     }
-  } else {
-    showError(`JSON 解析错误: ${result.error}`)
+  } catch (err: any) {
+    showError(err.message)
+  } finally {
+    isProcessing.value = false
   }
 }
 
 // 压缩 JSON
-const compressJson = () => {
+const compressJson = async () => {
   clearMessages()
   if (!inputJson.value.trim()) {
     showError('请输入 JSON 内容')
     return
   }
   
-  const result = tryParseJson(inputJson.value, true)
-  if (result.success) {
-    outputJson.value = JSON.stringify(result.data)
-    showSuccess('压缩成功')
-  } else {
-    showError(`JSON 解析错误: ${result.error}`)
+  isProcessing.value = true
+  try {
+    const result = await parseJson(inputJson.value, true)
+    if (result.success) {
+      outputJson.value = JSON.stringify(result.data)
+      showSuccess('压缩成功')
+    } else {
+      showError(`JSON 解析错误: ${result.error}`)
+    }
+  } catch (err: any) {
+    showError(err.message)
+  } finally {
+    isProcessing.value = false
   }
 }
 
 // 转义 JSON
-const escapeJson = () => {
+const escapeJson = async () => {
   clearMessages()
   if (!inputJson.value.trim()) {
     showError('请输入 JSON 内容')
     return
   }
   
-  // 先验证是否为有效 JSON
-  const result = tryParseJson(inputJson.value, true)
-  if (result.success) {
-    // 将 JSON 字符串转义为可嵌入字符串
-    outputJson.value = JSON.stringify(JSON.stringify(result.data))
-    showSuccess('转义成功')
-  } else {
-    // 如果不是有效 JSON，直接转义字符串
-    outputJson.value = JSON.stringify(inputJson.value)
-    showSuccess('已将内容转义为字符串')
+  isProcessing.value = true
+  try {
+    const result = await parseJson(inputJson.value, true)
+    if (result.success) {
+      outputJson.value = JSON.stringify(JSON.stringify(result.data))
+      showSuccess('转义成功')
+    } else {
+      outputJson.value = JSON.stringify(inputJson.value)
+      showSuccess('已将内容转义为字符串')
+    }
+  } catch (err: any) {
+    showError(err.message)
+  } finally {
+    isProcessing.value = false
   }
 }
 
 // 去除转义
-const unescapeJson = () => {
+const unescapeJson = async () => {
   clearMessages()
   if (!inputJson.value.trim()) {
     showError('请输入转义后的 JSON 字符串')
     return
   }
   
+  isProcessing.value = true
   try {
-    // 尝试解析外层字符串
-    let unescaped = JSON.parse(inputJson.value)
-    
-    // 如果结果还是字符串，尝试再解析一层
-    if (typeof unescaped === 'string') {
-      try {
-        const inner = JSON.parse(unescaped)
-        outputJson.value = JSON.stringify(inner, null, indentSize.value)
-      } catch {
-        outputJson.value = unescaped
+    // tryParseJson 不会自动去转义字符串内的内容，所以此处我们可以先 parse 一次外层
+    const result = await parseJson(inputJson.value, false)
+    if (result.success) {
+      let unescaped = result.data
+      if (typeof unescaped === 'string') {
+        const innerResult = await parseJson(unescaped, false)
+        if (innerResult.success) {
+          outputJson.value = JSON.stringify(innerResult.data, null, indentSize.value)
+        } else {
+          outputJson.value = unescaped
+        }
+      } else {
+        outputJson.value = JSON.stringify(unescaped, null, indentSize.value)
       }
+      showSuccess('去除转义成功')
     } else {
-      outputJson.value = JSON.stringify(unescaped, null, indentSize.value)
+      showError(`解析错误: ${result.error}`)
     }
-    showSuccess('去除转义成功')
-  } catch (error) {
-    showError(`解析错误: ${(error as Error).message}`)
+  } catch (error: any) {
+    showError(`解析错误: ${error.message}`)
+  } finally {
+    isProcessing.value = false
   }
 }
 
 // 智能纠错
-const fixJson = () => {
+const fixJson = async () => {
   clearMessages()
   if (!inputJson.value.trim()) {
     showError('请输入需要修复的 JSON 内容')
     return
   }
   
-  const result = tryParseJson(inputJson.value, true)
-  if (result.success) {
-    outputJson.value = JSON.stringify(result.data, null, indentSize.value)
-    if (result.fixed) {
-      showSuccess('JSON 已成功修复！修复内容包括：单引号→双引号、未引用的键名、尾部逗号、注释等')
+  isProcessing.value = true
+  try {
+    const result = await parseJson(inputJson.value, true)
+    if (result.success) {
+      outputJson.value = JSON.stringify(result.data, null, indentSize.value)
+      if (result.fixed) {
+        showSuccess('JSON 已成功修复！修复内容包括：单引号→双引号、未引用的键名、尾部逗号、注释等')
+      } else {
+        showSuccess('JSON 格式正确，无需修复')
+      }
     } else {
-      showSuccess('JSON 格式正确，无需修复')
+      showError(`无法修复的错误: ${result.error}`)
     }
-  } else {
-    showError(`无法修复的错误: ${result.error}`)
+  } catch (err: any) {
+    showError(err.message)
+  } finally {
+    isProcessing.value = false
   }
 }
 
@@ -198,42 +236,46 @@ const applyOutput = () => {
 // 清空所有
 const clearAll = () => {
   inputJson.value = ''
-  compareJson.value = ''
+  compareJsonInput.value = ''
   outputJson.value = ''
   clearMessages()
 }
 
 // JSON 差异对比
-const diffResult = ref<ReturnType<typeof compareJsonObjects> | null>(null)
+const diffResult = ref<any[]>([])
+const hasCompared = ref(false)
 
-const compareJsons = () => {
+const { list: diffVirtualList, containerProps: diffContainerProps, wrapperProps: diffWrapperProps } = useVirtualList(
+  diffResult,
+  {
+    itemHeight: 48,
+  }
+)
+
+const compareJsons = async () => {
   clearMessages()
   
-  if (!inputJson.value.trim() || !compareJson.value.trim()) {
+  if (!inputJson.value.trim() || !compareJsonInput.value.trim()) {
     showError('请在两侧都输入 JSON 内容')
     return
   }
   
-  const left = tryParseJson(inputJson.value, true)
-  const right = tryParseJson(compareJson.value, true)
-  
-  if (!left.success) {
-    showError(`左侧 JSON 错误: ${left.error}`)
-    return
-  }
-  
-  if (!right.success) {
-    showError(`右侧 JSON 错误: ${right.error}`)
-    return
-  }
-  
-  const diff = compareJsonObjects(left.data, right.data, '')
-  diffResult.value = diff
-  
-  if (diff.length === 0) {
-    showSuccess('两个 JSON 完全相同')
-  } else {
-    showSuccess(`发现 ${diff.length} 处差异`)
+  isProcessing.value = true
+  hasCompared.value = false
+  try {
+    const diff = await compareJsonWorker(inputJson.value, compareJsonInput.value)
+    diffResult.value = diff
+    hasCompared.value = true
+    
+    if (diff.length === 0) {
+      showSuccess('两个 JSON 完全相同')
+    } else {
+      showSuccess(`发现 ${diff.length} 处差异`)
+    }
+  } catch (err: any) {
+    showError(err.message)
+  } finally {
+    isProcessing.value = false
   }
 }
 
@@ -469,12 +511,12 @@ useSeoMeta({
         </div>
         
         <!-- 右侧 -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative">
           <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
             <span class="text-sm font-medium text-gray-700">对比 JSON</span>
           </div>
           <textarea
-            v-model="compareJson"
+            v-model="compareJsonInput"
             placeholder="输入第二个 JSON..."
             class="w-full h-64 p-4 font-mono text-sm resize-none focus:outline-none"
             spellcheck="false"
@@ -482,49 +524,55 @@ useSeoMeta({
         </div>
       </div>
       
+      <!-- 加载提示 -->
+      <div v-if="isProcessing" class="bg-white rounded-xl shadow-sm border border-gray-200 p-8 flex flex-col items-center justify-center">
+        <Loader2 class="w-8 h-8 text-amber-500 animate-spin mb-3" />
+        <span class="text-gray-500">正在处理...</span>
+      </div>
+
       <!-- 差异结果 -->
-      <div v-if="diffResult" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div v-if="hasCompared && !isProcessing" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
           <span class="text-sm font-medium text-gray-700">差异结果 ({{ diffResult.length }} 处)</span>
         </div>
-        <div class="max-h-96 overflow-auto">
+        <div>
           <div v-if="diffResult.length === 0" class="p-8 text-center text-gray-500">
             <CheckCircle class="w-12 h-12 mx-auto mb-3 text-green-500" />
             <p class="font-medium">两个 JSON 完全相同</p>
           </div>
-          <table v-else class="w-full text-sm">
-            <thead class="bg-gray-50 sticky top-0">
-              <tr>
-                <th class="px-4 py-2 text-left text-gray-600 font-medium">路径</th>
-                <th class="px-4 py-2 text-left text-gray-600 font-medium">类型</th>
-                <th class="px-4 py-2 text-left text-gray-600 font-medium">原始值</th>
-                <th class="px-4 py-2 text-left text-gray-600 font-medium">对比值</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-              <tr v-for="(diff, index) in diffResult" :key="index" class="hover:bg-gray-50">
-                <td class="px-4 py-2 font-mono text-xs text-gray-900">{{ diff.path }}</td>
-                <td class="px-4 py-2">
-                  <span
-                    :class="[
-                      'px-2 py-0.5 rounded text-xs font-medium',
-                      diff.type === 'added' ? 'bg-green-100 text-green-700' :
-                      diff.type === 'removed' ? 'bg-red-100 text-red-700' :
-                      'bg-yellow-100 text-yellow-700'
-                    ]"
-                  >
-                    {{ diff.type === 'added' ? '新增' : diff.type === 'removed' ? '删除' : '修改' }}
-                  </span>
-                </td>
-                <td class="px-4 py-2 font-mono text-xs max-w-[200px] truncate" :class="diff.type === 'removed' ? 'text-red-600 bg-red-50' : 'text-gray-600'">
-                  {{ diff.type === 'added' ? '-' : formatJsonValue(diff.left?.value ?? diff.left) }}
-                </td>
-                <td class="px-4 py-2 font-mono text-xs max-w-[200px] truncate" :class="diff.type === 'added' ? 'text-green-600 bg-green-50' : 'text-gray-600'">
-                  {{ diff.type === 'removed' ? '-' : formatJsonValue(diff.right?.value ?? diff.right) }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <div v-else class="w-full text-sm">
+            <div class="bg-gray-50 sticky top-0 grid grid-cols-12 gap-4 px-4 py-3 border-b border-gray-200 z-10">
+              <div class="text-left text-gray-600 font-medium col-span-3">路径</div>
+              <div class="text-left text-gray-600 font-medium col-span-2">类型</div>
+              <div class="text-left text-gray-600 font-medium col-span-3">原始值</div>
+              <div class="text-left text-gray-600 font-medium col-span-4">对比值</div>
+            </div>
+            <div v-bind="diffContainerProps" class="max-h-96 overflow-auto">
+              <div v-bind="diffWrapperProps" class="divide-y divide-gray-100">
+                <div v-for="item in diffVirtualList" :key="item.index" class="grid grid-cols-12 gap-4 px-4 py-3 hover:bg-gray-50 items-center">
+                  <div class="font-mono text-xs text-gray-900 col-span-3 break-all">{{ item.data.path }}</div>
+                  <div class="col-span-2">
+                    <span
+                      :class="[
+                        'px-2 py-0.5 rounded text-xs font-medium',
+                        item.data.type === 'added' ? 'bg-green-100 text-green-700' :
+                        item.data.type === 'removed' ? 'bg-red-100 text-red-700' :
+                        'bg-yellow-100 text-yellow-700'
+                      ]"
+                    >
+                      {{ item.data.type === 'added' ? '新增' : item.data.type === 'removed' ? '删除' : '修改' }}
+                    </span>
+                  </div>
+                  <div class="font-mono text-xs max-w-full truncate col-span-3" :class="item.data.type === 'removed' ? 'text-red-600 bg-red-50 px-1 py-0.5 rounded' : 'text-gray-600'">
+                    {{ item.data.type === 'added' ? '-' : formatJsonValue(item.data.left?.value ?? item.data.left) }}
+                  </div>
+                  <div class="font-mono text-xs max-w-full truncate col-span-4" :class="item.data.type === 'added' ? 'text-green-600 bg-green-50 px-1 py-0.5 rounded' : 'text-gray-600'">
+                    {{ item.data.type === 'removed' ? '-' : formatJsonValue(item.data.right?.value ?? item.data.right) }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -543,3 +591,4 @@ useSeoMeta({
     </div>
   </div>
 </template>
+

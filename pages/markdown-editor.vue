@@ -1,26 +1,9 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { marked } from 'marked'
-import hljs from 'highlight.js'
-import { Download, Copy, FileText, Eye, Code, Columns } from 'lucide-vue-next'
-import { markdownExportStyles, sanitizeHtml } from '~/utils/markdown'
+import { ref, computed, watch } from 'vue'
+import { Download, Copy, FileText, Eye, Code, Columns, Loader2 } from 'lucide-vue-next'
+import { markdownExportStyles } from '~/utils/markdown'
 
-// 配置 marked
-marked.setOptions({
-  gfm: true,
-  breaks: true
-})
-
-// 自定义 renderer 实现代码高亮
-const renderer = new marked.Renderer()
-renderer.code = function ({ text, lang }: { text: string; lang?: string }) {
-  const language = lang && hljs.getLanguage(lang) ? lang : 'plaintext'
-  const highlighted = hljs.highlight(text, { language }).value
-  return `<pre class="hljs-pre"><code class="hljs language-${language}">${highlighted}</code></pre>`
-}
-marked.use({ renderer })
-
-// 编辑器内容
+// Editor 内容
 const markdownContent = ref(`# Markdown 编辑器
 
 欢迎使用 **Markdown 编辑器**！左侧编辑，右侧实时预览。
@@ -61,14 +44,32 @@ console.log(greet('World'));
 // 视图模式：edit / preview / split
 const viewMode = ref<'edit' | 'preview' | 'split'>('split')
 
-// 渲染后的 HTML
-const renderedHtml = computed(() => {
-  try {
-    return sanitizeHtml(marked(markdownContent.value) as string)
-  } catch {
-    return '<p style="color: red;">渲染错误</p>'
-  }
-})
+// 渲染状态与 HTML
+const renderedHtml = ref('')
+const isRendering = ref(false)
+
+// 引入 Markdown Worker
+const { renderMarkdown } = useMarkdownWorker()
+
+// 监听 Markdown 变化并通过 Worker 渲染
+let renderTimeout: ReturnType<typeof setTimeout> | null = null
+
+watch(markdownContent, (newContent) => {
+  if (renderTimeout) clearTimeout(renderTimeout)
+  isRendering.value = true
+  
+  // 防抖 300ms 触发渲染，避免高频打字时不断发送消息
+  renderTimeout = setTimeout(async () => {
+    try {
+      const html = await renderMarkdown(newContent)
+      renderedHtml.value = html
+    } catch (error) {
+      renderedHtml.value = '<p style="color: red;">渲染错误</p>'
+    } finally {
+      isRendering.value = false
+    }
+  }, 300)
+}, { immediate: true })
 
 // 统计信息
 const stats = computed(() => {
@@ -115,7 +116,6 @@ const downloadMarkdown = () => {
 
 // 下载为 HTML 文件
 const downloadHtml = () => {
-  const safeHtml = sanitizeHtml(renderedHtml.value)
   const htmlContent = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -127,7 +127,7 @@ const downloadHtml = () => {
   </style>
 </head>
 <body>
-${safeHtml}
+${renderedHtml.value}
 </body>
 </html>`
   const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })
@@ -304,14 +304,18 @@ useSeoMeta({
         v-if="viewMode === 'preview' || viewMode === 'split'"
         class="flex flex-col flex-1 min-w-0"
       >
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col flex-1 overflow-hidden">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col flex-1 overflow-hidden relative">
           <div class="px-4 py-2 border-b border-gray-100 flex items-center justify-between">
-            <span class="text-xs font-medium text-gray-400 uppercase tracking-wide">预览</span>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-medium text-gray-400 uppercase tracking-wide">预览</span>
+              <Loader2 v-if="isRendering" class="w-3.5 h-3.5 text-gray-400 animate-spin" />
+            </div>
             <span class="text-xs text-gray-400">{{ stats.words }} 词</span>
           </div>
           <div
             ref="previewRef"
             class="flex-1 overflow-y-auto p-6 markdown-body"
+            :class="{ 'opacity-50': isRendering }"
             v-html="renderedHtml"
           ></div>
         </div>

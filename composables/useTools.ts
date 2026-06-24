@@ -18,6 +18,28 @@ export interface ToolCategory {
 
 export const tools: Tool[] = [
   {
+    name: '纯文本对比',
+    description: '对比两段代码或文本的变动差异，支持行级增删高亮。',
+    route: '/text-diff',
+    category: '开发工具',
+    gradient: 'from-orange-500 to-amber-500',
+    iconBg: 'bg-orange-50',
+    iconColor: 'text-orange-600',
+    hoverColor: 'group-hover:text-orange-600',
+    icon: 'file-diff',
+  },
+  {
+    name: '数据格式转换',
+    description: 'JSON、YAML、Properties 格式互转，支持嵌套打平与结构还原。',
+    route: '/format-converter',
+    category: '开发工具',
+    gradient: 'from-fuchsia-500 to-pink-500',
+    iconBg: 'bg-fuchsia-50',
+    iconColor: 'text-fuchsia-600',
+    hoverColor: 'group-hover:text-fuchsia-600',
+    icon: 'file-json-2',
+  },
+  {
     name: '图片压缩',
     description: '高效压缩 PNG/JPG 图片，智能平衡画质与体积，支持批量处理。',
     route: '/image-compress',
