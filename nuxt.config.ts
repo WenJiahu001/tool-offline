@@ -1,12 +1,8 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+const isProd = process.env.NODE_ENV === 'production'
+
 export default defineNuxtConfig({
     modules: ['@nuxtjs/tailwindcss', '@vueuse/nuxt', '@vite-pwa/nuxt'],
-
-    tailwindcss: {
-        config: {
-            darkMode: 'class',
-        }
-    },
 
     pwa: {
         registerType: 'autoUpdate',
@@ -41,7 +37,8 @@ export default defineNuxtConfig({
         },
         devOptions: {
             enabled: true,
-            type: 'module'
+            type: 'module',
+            suppressWarnings: true
         }
     },
 
@@ -57,12 +54,12 @@ export default defineNuxtConfig({
                 { name: 'viewport', content: 'width=device-width, initial-scale=1' },
                 { name: 'description', content: '纯本地运行的在线工具集，提供图片压缩、PDF合并、图片转PDF等功能，数据不上传服务器，安全高效。' }
             ],
-            script: [
+            script: isProd ? [
                 {
                     innerHTML: "if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js', { scope: '/' }) }) }",
                     type: 'text/javascript'
                 }
-            ]
+            ] : []
         }
     },
 

@@ -1,12 +1,7 @@
 <script setup>
 import { useRoute } from 'vue-router'
-import { useDark, useToggle } from '@vueuse/core'
-import { Sun, Moon } from 'lucide-vue-next'
 
 const route = useRoute()
-
-const isDark = useDark()
-const toggleDark = useToggle(isDark)
 </script>
 
 <template>
@@ -28,15 +23,7 @@ const toggleDark = useToggle(isDark)
 
       <!-- 右侧导航 -->
       <nav class="flex items-center gap-4">
-        <!-- 主题切换按钮 -->
-        <button 
-          @click="toggleDark()" 
-          class="p-2 rounded-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          :title="isDark ? '切换到浅色模式' : '切换到深色模式'"
-        >
-          <Moon v-if="!isDark" class="w-4 h-4" />
-          <Sun v-else class="w-4 h-4" />
-        </button>
+
 
         <NuxtLink 
           v-if="route.path !== '/'" 
