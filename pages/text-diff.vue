@@ -107,9 +107,7 @@ const clearAll = () => {
 const mainInput = ref<HTMLTextAreaElement | null>(null)
 useAutoFocus(mainInput)
 
-const showShortcutHelp = ref(false)
-
-const { isMac, shortcuts } = useShortcuts([
+const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
   {
     key: 'ctrl+d',
     description: '清空文本',
@@ -119,16 +117,6 @@ const { isMac, shortcuts } = useShortcuts([
     key: 'alt+c',
     description: '清空文本',
     action: clearAll
-  },
-  {
-    key: '?',
-    description: '显示快捷键帮助',
-    action: () => { showShortcutHelp.value = true }
-  },
-  {
-    key: 'esc',
-    description: '返回首页',
-    action: () => router.push('/')
   }
 ])
 </script>
@@ -165,7 +153,7 @@ const { isMac, shortcuts } = useShortcuts([
           class="px-3 py-1.5 text-gray-500 hover:bg-gray-50 border border-gray-200 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 bg-white shadow-sm"
         >
           <Keyboard class="w-4 h-4" />
-          <span>快捷键说明 (按 <kbd class="font-mono bg-white border border-gray-200 px-1 rounded text-[10px] shadow-sm">?</kbd>)</span>
+          <span>快捷键说明</span>
         </button>
       </div>
     </div>
@@ -248,7 +236,6 @@ const { isMac, shortcuts } = useShortcuts([
     <ToolShortcutHelp 
       :show="showShortcutHelp" 
       :shortcuts="shortcuts" 
-      :is-mac="isMac" 
       @close="showShortcutHelp = false" 
     />
   </div>

@@ -1,59 +1,20 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { X, Keyboard } from 'lucide-vue-next'
 
-interface ShortcutConfig {
+interface FormattedShortcut {
   key: string
   description: string
+  keys: string[]
 }
 
-const props = defineProps<{
+defineProps<{
   show: boolean
-  shortcuts: ShortcutConfig[]
-  isMac: boolean
+  shortcuts: FormattedShortcut[]
 }>()
 
 const emit = defineEmits<{
   (e: 'close'): void
 }>()
-
-// 快捷键格式化函数，转换为美观的按键数组
-const formatKey = (keyCombo: string) => {
-  const parts = keyCombo.split('+')
-  return parts.map(part => {
-    const p = part.trim().toLowerCase()
-    if (p === 'ctrl') return props.isMac ? '⌘ Cmd' : 'Ctrl'
-    if (p === 'shift') return props.isMac ? '⇧ Shift' : 'Shift'
-    if (p === 'alt') return props.isMac ? '⌥ Option' : 'Alt'
-    if (p === 'esc') return 'Esc'
-    if (p === 'enter') return 'Enter'
-    if (p === 'space') return 'Space'
-    if (p === 'arrowup') return '↑'
-    if (p === 'arrowdown') return '↓'
-    if (p === 'arrowleft') return '←'
-    if (p === 'arrowright') return '→'
-    return p.toUpperCase()
-  })
-}
-
-// 监听 Escape 键关闭弹窗
-const handleKeyDown = (e: KeyboardEvent) => {
-  if (props.show && e.key === 'Escape') {
-    emit('close')
-  }
-}
-
-watch(() => props.show, (newVal) => {
-  if (newVal) {
-    window.addEventListener('keydown', handleKeyDown)
-  } else {
-    window.removeEventListener('keydown', handleKeyDown)
-  }
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('keydown', handleKeyDown)
-})
 </script>
 
 <template>
@@ -89,7 +50,7 @@ onBeforeUnmount(() => {
               <span class="text-sm text-gray-600 font-medium">{{ shortcut.description }}</span>
               <div class="flex gap-1.5 flex-wrap items-center justify-end">
                 <kbd 
-                  v-for="(k, idx) in formatKey(shortcut.key)" 
+                  v-for="(k, idx) in shortcut.keys" 
                   :key="idx"
                   class="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-md shadow-sm inline-flex items-center font-mono"
                 >
@@ -113,3 +74,4 @@ onBeforeUnmount(() => {
     </div>
   </Teleport>
 </template>
+

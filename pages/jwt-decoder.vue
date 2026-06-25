@@ -271,7 +271,6 @@ const mainInput = ref<HTMLTextAreaElement | null>(null)
 useAutoFocus(mainInput)
 
 const router = useRouter()
-const showShortcutHelp = ref(false)
 
 const copyOutput = async () => {
   if (parsedJwt.value?.success && parsedJwt.value.payload) {
@@ -279,7 +278,7 @@ const copyOutput = async () => {
   }
 }
 
-const { isMac, shortcuts } = useShortcuts([
+const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
   {
     key: 'ctrl+enter',
     description: '解析 Token',
@@ -299,16 +298,6 @@ const { isMac, shortcuts } = useShortcuts([
     key: 'ctrl+shift+c',
     description: '复制 Payload 结果',
     action: copyOutput
-  },
-  {
-    key: '?',
-    description: '显示快捷键帮助',
-    action: () => { showShortcutHelp.value = true }
-  },
-  {
-    key: 'esc',
-    description: '返回首页',
-    action: () => router.push('/')
   }
 ])
 </script>
@@ -347,7 +336,7 @@ const { isMac, shortcuts } = useShortcuts([
           class="px-3.5 py-2 border border-gray-200 hover:bg-gray-50 text-gray-600 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 bg-white shadow-sm"
         >
           <Keyboard class="w-4 h-4" />
-          <span>快捷键说明 (按 <kbd class="font-mono bg-white border border-gray-200 px-1 rounded text-[10px] shadow-sm">?</kbd>)</span>
+          <span>快捷键说明</span>
         </button>
       </div>
     </div>
@@ -541,7 +530,6 @@ const { isMac, shortcuts } = useShortcuts([
     <ToolShortcutHelp 
       :show="showShortcutHelp" 
       :shortcuts="shortcuts" 
-      :is-mac="isMac" 
       @close="showShortcutHelp = false" 
     />
   </div>

@@ -357,7 +357,6 @@ const mainInput = ref<HTMLInputElement | null>(null)
 useAutoFocus(mainInput)
 
 const router = useRouter()
-const showShortcutHelp = ref(false)
 
 const triggerConvert = () => {
   const activeEl = document.activeElement
@@ -381,7 +380,7 @@ const copyCurrentSec = () => {
   handleCopy(liveTimestampSec.value.toString(), 'liveSec')
 }
 
-const { isMac, shortcuts } = useShortcuts([
+const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
   {
     key: 'ctrl+enter',
     description: '执行时间转换',
@@ -401,16 +400,6 @@ const { isMac, shortcuts } = useShortcuts([
     key: 'ctrl+shift+c',
     description: '复制当前秒级时间戳',
     action: copyCurrentSec
-  },
-  {
-    key: '?',
-    description: '显示快捷键帮助',
-    action: () => { showShortcutHelp.value = true }
-  },
-  {
-    key: 'esc',
-    description: '返回首页',
-    action: () => router.push('/')
   }
 ])
 </script>
@@ -445,7 +434,7 @@ const { isMac, shortcuts } = useShortcuts([
           class="px-3 py-1.5 text-gray-500 hover:bg-gray-50 border border-gray-200 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 bg-white shadow-sm"
         >
           <Keyboard class="w-4 h-4" />
-          <span>快捷键说明 (按 <kbd class="font-mono bg-white border border-gray-200 px-1 rounded text-[10px] shadow-sm">?</kbd>)</span>
+          <span>快捷键说明</span>
         </button>
       </div>
     </div>
@@ -833,7 +822,6 @@ const { isMac, shortcuts } = useShortcuts([
     <ToolShortcutHelp 
       :show="showShortcutHelp" 
       :shortcuts="shortcuts" 
-      :is-mac="isMac" 
       @close="showShortcutHelp = false" 
     />
   </div>

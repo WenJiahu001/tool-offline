@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
+import { useStorage } from '@vueuse/core'
 import { Code2, FileText, Image as ImageIcon, QrCode, ScanSearch, Shield, WandSparkles, Clock, Key, Binary, Search, HelpCircle, Keyboard, Database } from 'lucide-vue-next'
 
 useSeoMeta({
@@ -15,12 +16,35 @@ const { categorizedTools, searchQuery, tools } = useTools()
 const searchInput = ref<HTMLInputElement | null>(null)
 const isMac = ref(false)
 
-if (typeof window !== 'undefined') {
-  isMac.value = /Mac|iPod|iPad|iPhone/i.test(navigator.platform)
+// 用于记录和聚焦最后一次使用的工具路由
+const lastActiveRoute = useStorage('last-active-tool-route', '')
+
+const saveActiveRoute = (route: string) => {
+  lastActiveRoute.value = route
 }
 
-// 自动聚焦搜索框
-useAutoFocus(searchInput)
+onMounted(() => {
+  if (typeof window !== 'undefined') {
+    isMac.value = /Mac|iPod|iPad|iPhone/i.test(navigator.userAgent || navigator.platform || '')
+  }
+
+  nextTick(() => {
+    setTimeout(() => {
+      let focused = false
+      if (lastActiveRoute.value) {
+        const cards = Array.from(document.querySelectorAll('.tool-card')) as HTMLElement[]
+        const targetCard = cards.find(card => card.getAttribute('href') === lastActiveRoute.value)
+        if (targetCard) {
+          targetCard.focus()
+          focused = true
+        }
+      }
+      if (!focused && searchInput.value) {
+        searchInput.value.focus()
+      }
+    }, 100)
+  })
+})
 
 // 全局 Ctrl+K 聚焦搜索框
 useShortcuts([
@@ -35,12 +59,13 @@ useShortcuts([
     },
     disabledInInput: false // 输入框中按 Ctrl+K 也允许聚焦
   }
-])
+], { enableEscToHome: false })
 
 // 搜索框回车：如果过滤后有工具，跳转至第一个工具
 const handleSearchEnter = () => {
   if (categorizedTools.value.length > 0 && categorizedTools.value[0].tools.length > 0) {
     const targetTool = categorizedTools.value[0].tools[0]
+    saveActiveRoute(targetTool.route) // 记录进入的工具路由
     router.push(targetTool.route)
   }
 }
@@ -220,6 +245,7 @@ const toolIcons = {
             :to="tool.route"
             tabindex="0"
             class="tool-card group relative bg-white rounded-xl p-4 sm:p-5 shadow-sm border border-gray-100 transition-all duration-300 flex flex-col items-start overflow-hidden active:scale-95 hover:shadow-xl hover:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:scale-[1.03] focus:shadow-md"
+            @click="saveActiveRoute(tool.route)"
           >
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r" :class="tool.gradient"></div>
             <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 group-focus:scale-110 transition-transform duration-300" :class="[tool.iconBg, tool.iconColor]">

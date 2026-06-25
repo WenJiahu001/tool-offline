@@ -287,9 +287,7 @@ const compareJsons = async () => {
   }
 }
 
-const showShortcutHelp = ref(false)
-
-const { isMac, shortcuts } = useShortcuts([
+const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
   {
     key: 'ctrl+enter',
     description: '格式化 JSON / 开始对比',
@@ -329,16 +327,6 @@ const { isMac, shortcuts } = useShortcuts([
     key: 'ctrl+shift+v',
     description: '应用输出到输入',
     action: applyOutput
-  },
-  {
-    key: '?',
-    description: '显示快捷键帮助',
-    action: () => { showShortcutHelp.value = true }
-  },
-  {
-    key: 'esc',
-    description: '返回首页',
-    action: () => router.push('/')
   }
 ])
 
@@ -361,7 +349,7 @@ useSeoMeta({
         class="flex items-center gap-1.5 self-start px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors border border-gray-200/50"
       >
         <Keyboard class="w-3.5 h-3.5" />
-        <span>快捷键说明 (按 <kbd class="font-mono bg-white border border-gray-200 px-1 rounded shadow-sm text-[10px]">?</kbd>)</span>
+        <span>快捷键说明</span>
       </button>
     </div>
     
@@ -683,7 +671,6 @@ useSeoMeta({
     <ToolShortcutHelp 
       :show="showShortcutHelp" 
       :shortcuts="shortcuts" 
-      :is-mac="isMac" 
       @close="showShortcutHelp = false" 
     />
   </div>

@@ -345,7 +345,6 @@ const mainInput = ref<HTMLInputElement | null>(null)
 useAutoFocus(mainInput)
 
 const router = useRouter()
-const showShortcutHelp = ref(false)
 
 const resetAll = () => {
   cronExpression.value = '*/5 * * * *'
@@ -354,7 +353,7 @@ const resetAll = () => {
   parseExpression()
 }
 
-const { isMac, shortcuts } = useShortcuts([
+const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
   {
     key: 'ctrl+enter',
     description: '解析并预测时间',
@@ -374,16 +373,6 @@ const { isMac, shortcuts } = useShortcuts([
     key: 'ctrl+shift+c',
     description: '复制 Cron 表达式',
     action: copyExpression
-  },
-  {
-    key: '?',
-    description: '显示快捷键帮助',
-    action: () => { showShortcutHelp.value = true }
-  },
-  {
-    key: 'esc',
-    description: '返回首页',
-    action: () => router.push('/')
   }
 ])
 </script>
@@ -409,7 +398,7 @@ const { isMac, shortcuts } = useShortcuts([
           class="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors border border-gray-200/50 shadow-sm"
         >
           <Keyboard class="w-3.5 h-3.5" />
-          <span>快捷键说明 (按 <kbd class="font-mono bg-white border border-gray-200 px-1 rounded shadow-sm text-[10px]">?</kbd>)</span>
+          <span>快捷键说明</span>
         </button>
       </div>
       <div class="flex flex-wrap gap-2">
@@ -844,7 +833,6 @@ const { isMac, shortcuts } = useShortcuts([
     <ToolShortcutHelp 
       :show="showShortcutHelp" 
       :shortcuts="shortcuts" 
-      :is-mac="isMac" 
       @close="showShortcutHelp = false" 
     />
   </div>

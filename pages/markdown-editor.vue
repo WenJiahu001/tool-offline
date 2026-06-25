@@ -188,13 +188,12 @@ useSeoMeta({
 useAutoFocus(editorRef)
 
 const router = useRouter()
-const showShortcutHelp = ref(false)
 
 const clearAll = () => {
   markdownContent.value = ''
 }
 
-const { isMac, shortcuts } = useShortcuts([
+const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
   {
     key: 'ctrl+s',
     description: '导出为 .md 文件',
@@ -216,16 +215,6 @@ const { isMac, shortcuts } = useShortcuts([
     key: 'alt+c',
     description: '清空编辑器',
     action: clearAll
-  },
-  {
-    key: '?',
-    description: '显示快捷键帮助',
-    action: () => { showShortcutHelp.value = true }
-  },
-  {
-    key: 'esc',
-    description: '返回首页',
-    action: () => router.push('/')
   }
 ])
 </script>
@@ -292,7 +281,7 @@ const { isMac, shortcuts } = useShortcuts([
           title="查看快捷键帮助"
         >
           <Keyboard class="h-4 w-4" />
-          <span>快捷键 (按 ?)</span>
+          <span>快捷键说明</span>
         </button>
         <!-- 复制按钮 -->
         <button
@@ -387,7 +376,6 @@ const { isMac, shortcuts } = useShortcuts([
     <ToolShortcutHelp 
       :show="showShortcutHelp" 
       :shortcuts="shortcuts" 
-      :is-mac="isMac" 
       @close="showShortcutHelp = false" 
     />
   </div>
