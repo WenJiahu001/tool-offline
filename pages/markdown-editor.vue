@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { Download, Copy, FileText, Eye, Code, Columns, Loader2 } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { Download, Copy, FileText, Eye, Code, Columns, Loader2, Keyboard } from 'lucide-vue-next'
 import { markdownExportStyles } from '~/utils/markdown'
 
 // Editor 内容
@@ -183,6 +184,50 @@ useSeoMeta({
   description: '在线 Markdown 编辑器，支持实时预览、代码高亮、文件导入导出。纯本地运行，数据安全无忧。',
   keywords: 'Markdown编辑器, Markdown预览, 在线编辑器, 代码高亮, 本地工具'
 })
+// 快捷键和自动聚焦支持
+useAutoFocus(editorRef)
+
+const router = useRouter()
+const showShortcutHelp = ref(false)
+
+const clearAll = () => {
+  markdownContent.value = ''
+}
+
+const { isMac, shortcuts } = useShortcuts([
+  {
+    key: 'ctrl+s',
+    description: '导出为 .md 文件',
+    action: downloadMarkdown,
+    disabledInInput: false // 在输入框编辑时也允许通过 Ctrl+S 导出
+  },
+  {
+    key: 'ctrl+alt+e',
+    description: '导出为 .html 文件',
+    action: downloadHtml,
+    disabledInInput: false
+  },
+  {
+    key: 'ctrl+d',
+    description: '清空编辑器',
+    action: clearAll
+  },
+  {
+    key: 'alt+c',
+    description: '清空编辑器',
+    action: clearAll
+  },
+  {
+    key: '?',
+    description: '显示快捷键帮助',
+    action: () => { showShortcutHelp.value = true }
+  },
+  {
+    key: 'esc',
+    description: '返回首页',
+    action: () => router.push('/')
+  }
+])
 </script>
 
 <template>
@@ -241,6 +286,14 @@ useSeoMeta({
       </div>
 
       <div class="flex items-center gap-2">
+        <button 
+          @click="showShortcutHelp = true"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          title="查看快捷键帮助"
+        >
+          <Keyboard class="h-4 w-4" />
+          <span>快捷键 (按 ?)</span>
+        </button>
         <!-- 复制按钮 -->
         <button
           @click="copyMarkdown"
@@ -261,16 +314,24 @@ useSeoMeta({
         <button
           @click="downloadMarkdown"
           class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          title="保存为 Markdown 文件"
         >
           <Download class="h-4 w-4" />
-          导出 .md
+          <span>导出 .md</span>
+          <kbd class="hidden md:inline-flex items-center px-1 bg-gray-100 text-gray-400 rounded text-[10px] font-mono leading-none select-none ml-1">
+            {{ isMac ? '⌘S' : 'Ctrl+S' }}
+          </kbd>
         </button>
         <button
           @click="downloadHtml"
           class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-gray-900 hover:bg-black text-white rounded-lg transition-colors shadow-sm"
+          title="导出为网页 HTML"
         >
           <Download class="h-4 w-4" />
-          导出 .html
+          <span>导出 .html</span>
+          <kbd class="hidden md:inline-flex items-center px-1 bg-white/20 text-white rounded text-[10px] font-mono leading-none select-none ml-1">
+            {{ isMac ? '⌘⌥E' : 'Ctrl+Alt+E' }}
+          </kbd>
         </button>
       </div>
     </div>
@@ -321,6 +382,14 @@ useSeoMeta({
         </div>
       </div>
     </div>
+
+    <!-- 快捷键说明模态框 -->
+    <ToolShortcutHelp 
+      :show="showShortcutHelp" 
+      :shortcuts="shortcuts" 
+      :is-mac="isMac" 
+      @close="showShortcutHelp = false" 
+    />
   </div>
 </template>
 

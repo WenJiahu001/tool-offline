@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Copy, Check, RotateCcw, FileText, Upload, Download, RefreshCw } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { Copy, Check, RotateCcw, FileText, Upload, Download, RefreshCw, Keyboard } from 'lucide-vue-next'
 import { stringToBase64, base64ToString, fileToBase64 } from '../utils/base64-tools'
 
 const {
@@ -218,6 +219,63 @@ useSeoMeta({
   description: '纯本地 Base64 编解码转换工具。支持中文字符无乱码的文本互转，支持将任意文件转换为 Base64 代码，并可将 Base64 代码还原为源文件下载。',
   keywords: 'Base64, Base64编码, Base64解码, 图片转Base64, Base64还原文件, 在线工具'
 })
+// 快捷键和自动聚焦支持
+const mainInput = ref<HTMLTextAreaElement | null>(null)
+useAutoFocus(mainInput)
+
+const router = useRouter()
+const showShortcutHelp = ref(false)
+
+const triggerAction = () => {
+  if (activeMode.value === 'b64-to-file') {
+    handleRestoreFile()
+  }
+}
+
+const copyOutput = async () => {
+  if (activeMode.value === 'text') {
+    if (textBase64.value) {
+      await copyText(textBase64.value, 'base64')
+    }
+  } else if (activeMode.value === 'file-to-b64') {
+    if (uploadedFile.value) {
+      await copyLargeText(uploadedFile.value.rawBase64, 'raw')
+    }
+  }
+}
+
+const { isMac, shortcuts } = useShortcuts([
+  {
+    key: 'ctrl+enter',
+    description: '还原并下载文件 (还原模式)',
+    action: triggerAction
+  },
+  {
+    key: 'ctrl+d',
+    description: '清空内容',
+    action: clearAll
+  },
+  {
+    key: 'alt+c',
+    description: '清空内容',
+    action: clearAll
+  },
+  {
+    key: 'ctrl+shift+c',
+    description: '复制输出结果',
+    action: copyOutput
+  },
+  {
+    key: '?',
+    description: '显示快捷键帮助',
+    action: () => { showShortcutHelp.value = true }
+  },
+  {
+    key: 'esc',
+    description: '返回首页',
+    action: () => router.push('/')
+  }
+])
 </script>
 
 <template>
@@ -277,13 +335,23 @@ useSeoMeta({
 
     <!-- 1. 文本 Base64 互转 -->
     <div v-if="activeMode === 'text'" class="space-y-4">
-      <div class="flex justify-end mb-2">
+      <div class="flex justify-end mb-2 gap-2">
         <button
           @click="clearAll"
           class="px-3 py-1.5 text-gray-500 hover:text-gray-700 text-sm transition-colors flex items-center gap-1.5 border border-gray-200 bg-white rounded-lg hover:bg-gray-50"
         >
           <RotateCcw class="w-4 h-4" />
-          重置
+          <span>重置</span>
+          <kbd class="hidden md:inline-flex items-center px-1 bg-gray-100 text-gray-400 border border-gray-200 rounded text-[9px] font-mono leading-none select-none">
+            {{ isMac ? '⌘D' : 'Ctrl+D' }}
+          </kbd>
+        </button>
+        <button 
+          @click="showShortcutHelp = true"
+          class="px-3 py-1.5 text-gray-500 hover:text-gray-700 border border-gray-200 text-sm font-medium rounded-lg bg-white hover:bg-gray-50 transition-colors flex items-center gap-1.5 shadow-sm"
+        >
+          <Keyboard class="w-4 h-4" />
+          <span>快捷键说明 (按 <kbd class="font-mono bg-white border border-gray-200 px-1 rounded text-[10px] shadow-sm">?</kbd>)</span>
         </button>
       </div>
 
@@ -306,6 +374,7 @@ useSeoMeta({
             </div>
           </div>
           <textarea
+            ref="mainInput"
             v-model="textPlain"
             @input="handlePlainInput"
             placeholder="在此输入明文文本，会自动实时转换为右侧 Base64 编码..."
@@ -354,6 +423,8 @@ useSeoMeta({
         @drop="(e) => handleDrop(e, handleFileSelect)"
       >
         <ToolUploadZone
+          :dragging="isDragging"
+          :icon="Upload"
           title="将文件拖到这里，或点击上传"
           description="支持任意类型的文件转 Base64 编码，纯本地解析"
           @click="triggerUpload"
@@ -464,17 +535,29 @@ useSeoMeta({
           <div class="flex gap-2">
             <button
               @click="clearAll"
-              class="px-4 py-2 border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5"
+              class="px-4 py-2 border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 bg-white"
             >
               <RotateCcw class="w-4 h-4" />
-              清空
+              <span>清空</span>
+              <kbd class="hidden md:inline-flex items-center px-1 bg-gray-100 text-gray-400 border border-gray-200 rounded text-[9px] font-mono leading-none select-none">
+                {{ isMac ? '⌘D' : 'Ctrl+D' }}
+              </kbd>
             </button>
             <button
               @click="handleRestoreFile"
               class="px-5 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-lg transition-colors flex items-center gap-1.5 shadow-sm active:scale-95"
             >
               <RefreshCw class="w-4 h-4" />
-              还原并下载文件
+              <span>还原并下载文件</span>
+              <kbd class="hidden md:inline-flex items-center px-1 bg-white/20 text-white rounded text-[10px] font-mono leading-none select-none">
+                {{ isMac ? '⌘↵' : 'Ctrl+Enter' }}
+              </kbd>
+            </button>
+            <button 
+              @click="showShortcutHelp = true"
+              class="px-4 py-2 text-gray-500 hover:text-gray-700 border border-gray-200 text-sm font-medium rounded-lg bg-white hover:bg-gray-50 transition-colors flex items-center gap-1.5 shadow-sm"
+            >
+              <Keyboard class="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -484,6 +567,7 @@ useSeoMeta({
             输入 Base64 编码 (支持 `data:...;base64,` 格式或纯 Base64)
           </label>
           <textarea
+            ref="mainInput"
             v-model="inputBase64ForFile"
             placeholder="请在此粘贴 Base64 代码，我们会自动还原为二进制文件并触发浏览器下载..."
             class="w-full h-80 p-4 font-mono text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
@@ -503,5 +587,13 @@ useSeoMeta({
         <li>• <strong>安全保障</strong>：所有编解码均在您的浏览器本地执行，文件和敏感数据绝对不会被上传至云端服务器，可放心使用。</li>
       </ul>
     </div>
+
+    <!-- 快捷键说明模态框 -->
+    <ToolShortcutHelp 
+      :show="showShortcutHelp" 
+      :shortcuts="shortcuts" 
+      :is-mac="isMac" 
+      @close="showShortcutHelp = false" 
+    />
   </div>
 </template>

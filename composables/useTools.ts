@@ -13,6 +13,7 @@ export interface Tool {
 export interface ToolCategory {
   name: string
   icon: string
+  description?: string
   tools: Tool[]
 }
 

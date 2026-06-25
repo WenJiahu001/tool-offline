@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { 
   Copy, 
   Check, 
@@ -10,11 +11,13 @@ import {
   Code, 
   Play, 
   Sparkles,
-  Minimize2
+  Minimize2,
+  Keyboard
 } from 'lucide-vue-next'
 import { format } from 'sql-formatter'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/github.css'
+import { minifySql as compressSql } from '../utils/sql-minify'
 
 // SEO Meta
 useSeoMeta({
@@ -135,19 +138,7 @@ const minifySql = () => {
   }
 
   try {
-    let sql = inputText.value
-    
-    // 1. 移除多行注释 /* ... */
-    sql = sql.replace(/\/\*[\s\S]*?\*\//g, ' ')
-    
-    // 2. 移除单行注释 -- ... 或 # ...
-    sql = sql.replace(/(?:--|#)[^\r\n]*/g, ' ')
-    
-    // 3. 将换行和连续空白字符替换为单个空格
-    sql = sql.replace(/\s+/g, ' ')
-    
-    // 4. 去除首尾空格
-    outputText.value = sql.trim()
+    outputText.value = compressSql(inputText.value)
     isMinified.value = true
     showSuccess('压缩成功')
   } catch (error) {
@@ -199,6 +190,51 @@ const highlightedSql = computed(() => {
     return outputText.value
   }
 })
+
+// 快捷键和自动聚焦支持
+const mainInput = ref<HTMLTextAreaElement | null>(null)
+useAutoFocus(mainInput)
+
+const router = useRouter()
+const showShortcutHelp = ref(false)
+
+const { isMac, shortcuts } = useShortcuts([
+  {
+    key: 'ctrl+enter',
+    description: '格式化 SQL',
+    action: formatSql
+  },
+  {
+    key: 'ctrl+shift+enter',
+    description: '压缩 SQL',
+    action: minifySql
+  },
+  {
+    key: 'ctrl+d',
+    description: '清空/重置',
+    action: clearAll
+  },
+  {
+    key: 'alt+c',
+    description: '清空/重置',
+    action: clearAll
+  },
+  {
+    key: 'ctrl+shift+c',
+    description: '复制输出结果',
+    action: copyOutput
+  },
+  {
+    key: '?',
+    description: '显示快捷键帮助',
+    action: () => { showShortcutHelp.value = true }
+  },
+  {
+    key: 'esc',
+    description: '返回首页',
+    action: () => router.push('/')
+  }
+])
 </script>
 
 <template>
@@ -275,7 +311,17 @@ const highlightedSql = computed(() => {
             class="px-3 py-1.5 text-gray-500 hover:bg-gray-50 text-sm font-medium rounded-lg transition-colors flex items-center gap-1"
           >
             <RotateCcw class="w-4 h-4" />
-            重置
+            <span>重置</span>
+            <kbd class="hidden md:inline-flex items-center px-1 bg-gray-100 text-gray-400 border border-gray-200 rounded text-[9px] font-mono leading-none select-none">
+              {{ isMac ? '⌘D' : 'Ctrl+D' }}
+            </kbd>
+          </button>
+          <button 
+            @click="showShortcutHelp = true"
+            class="px-3 py-1.5 text-gray-500 hover:bg-gray-50 border border-gray-200 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+          >
+            <Keyboard class="w-4 h-4" />
+            <span>快捷键说明 (按 <kbd class="font-mono bg-white border border-gray-200 px-1 rounded text-[10px] shadow-sm">?</kbd>)</span>
           </button>
         </div>
       </div>
@@ -313,6 +359,7 @@ const highlightedSql = computed(() => {
         </div>
         
         <textarea
+          ref="mainInput"
           v-model="inputText"
           placeholder="在此粘贴您的 SQL 语句，或将 .sql / .txt 文件拖拽至此..."
           class="flex-1 w-full p-4 font-mono text-sm resize-none focus:outline-none"
@@ -327,7 +374,10 @@ const highlightedSql = computed(() => {
             class="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1.5"
           >
             <Code class="w-4 h-4" />
-            格式化美化
+            <span>格式化美化</span>
+            <kbd class="hidden md:inline-flex items-center px-1 bg-white/20 text-white rounded text-[10px] font-mono leading-none select-none">
+              {{ isMac ? '⌘↵' : 'Ctrl+Enter' }}
+            </kbd>
           </button>
           <button
             @click="minifySql"
@@ -335,7 +385,10 @@ const highlightedSql = computed(() => {
             title="将 SQL 压缩到一行"
           >
             <Minimize2 class="w-4 h-4" />
-            压缩
+            <span>压缩</span>
+            <kbd class="hidden md:inline-flex items-center px-1 bg-gray-200 text-gray-400 rounded text-[10px] font-mono leading-none select-none">
+              {{ isMac ? '⌘⇧↵' : 'Ctrl+Shift+Enter' }}
+            </kbd>
           </button>
         </div>
       </div>
@@ -368,7 +421,10 @@ const highlightedSql = computed(() => {
             ]"
           >
             <component :is="copied ? Check : Copy" class="w-4 h-4" />
-            {{ copied ? '复制成功' : '复制结果' }}
+            <span>{{ copied ? '复制成功' : '复制结果' }}</span>
+            <kbd v-if="outputText" class="hidden md:inline-flex items-center px-1 bg-blue-100 text-blue-700 rounded text-[9px] font-mono leading-none select-none ml-1">
+              {{ isMac ? '⌘⇧C' : 'Ctrl+Shift+C' }}
+            </kbd>
           </button>
           <button
             @click="downloadOutput"
@@ -387,6 +443,14 @@ const highlightedSql = computed(() => {
         </div>
       </div>
     </div>
+
+    <!-- 快捷键说明模态框 -->
+    <ToolShortcutHelp 
+      :show="showShortcutHelp" 
+      :shortcuts="shortcuts" 
+      :is-mac="isMac" 
+      @close="showShortcutHelp = false" 
+    />
   </div>
 </template>
 

@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Copy, Check, FileJson, Minimize2, Maximize2, Code, ArrowRightLeft, Wrench, Upload, Download, CheckCircle, Loader2 } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { Copy, Check, FileJson, Minimize2, Maximize2, Code, ArrowRightLeft, Wrench, Upload, Download, CheckCircle, Loader2, Keyboard } from 'lucide-vue-next'
 import { formatJsonValue } from '~/utils/json-tools'
 import { useStorage, useVirtualList } from '@vueuse/core'
+
+const router = useRouter()
 
 const {
   errorMessage,
@@ -41,6 +44,11 @@ const isProcessing = ref(false)
 
 // 缩进空格数
 const indentSize = useStorage('json-indent-size', 2)
+
+// 快捷键和自动聚焦支持
+const mainInput = ref<HTMLTextAreaElement | null>(null)
+useAutoFocus(mainInput)
+
 
 // 处理文件上传/拖拽
 const handleFileSelect = async (files: FileList | File[]) => {
@@ -279,6 +287,61 @@ const compareJsons = async () => {
   }
 }
 
+const showShortcutHelp = ref(false)
+
+const { isMac, shortcuts } = useShortcuts([
+  {
+    key: 'ctrl+enter',
+    description: '格式化 JSON / 开始对比',
+    action: () => {
+      if (activeMode.value === 'format') {
+        formatJson()
+      } else {
+        compareJsons()
+      }
+    }
+  },
+  {
+    key: 'ctrl+shift+enter',
+    description: '压缩 JSON',
+    action: () => {
+      if (activeMode.value === 'format') {
+        compressJson()
+      }
+    }
+  },
+  {
+    key: 'ctrl+d',
+    description: '清空内容',
+    action: clearAll
+  },
+  {
+    key: 'alt+c',
+    description: '清空内容',
+    action: clearAll
+  },
+  {
+    key: 'ctrl+shift+c',
+    description: '复制输出结果',
+    action: copyOutput
+  },
+  {
+    key: 'ctrl+shift+v',
+    description: '应用输出到输入',
+    action: applyOutput
+  },
+  {
+    key: '?',
+    description: '显示快捷键帮助',
+    action: () => { showShortcutHelp.value = true }
+  },
+  {
+    key: 'esc',
+    description: '返回首页',
+    action: () => router.push('/')
+  }
+])
+
 useSeoMeta({
   title: 'JSON 工具 - 格式化/压缩/对比/纠错 - LocalTools',
   description: '在线 JSON 工具，支持格式化、压缩、转义、去转义、智能纠错修复、差异对比等功能。纯本地处理，数据安全。',
@@ -288,9 +351,18 @@ useSeoMeta({
 
 <template>
   <div class="px-6 py-8 max-w-7xl mx-auto">
-    <div class="mb-6">
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">JSON 工具</h1>
-      <p class="text-gray-500">格式化、压缩、转义、智能纠错、差异对比</p>
+    <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">JSON 工具</h1>
+        <p class="text-gray-500">格式化、压缩、转义、智能纠错、差异对比</p>
+      </div>
+      <button 
+        @click="showShortcutHelp = true"
+        class="flex items-center gap-1.5 self-start px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors border border-gray-200/50"
+      >
+        <Keyboard class="w-3.5 h-3.5" />
+        <span>快捷键说明 (按 <kbd class="font-mono bg-white border border-gray-200 px-1 rounded shadow-sm text-[10px]">?</kbd>)</span>
+      </button>
     </div>
     
     <!-- 模式切换 -->
@@ -308,7 +380,7 @@ useSeoMeta({
         格式化/转义
       </button>
       <button
-        @click="activeMode = 'compare'; diffResult = null"
+        @click="activeMode = 'compare'; diffResult = []"
         :class="[
           'px-4 py-2 rounded-lg text-sm font-medium transition-all',
           activeMode === 'compare'
@@ -336,17 +408,23 @@ useSeoMeta({
         <div class="flex flex-wrap items-center gap-2">
           <button
             @click="formatJson"
-            class="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5"
+            class="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
           >
             <Maximize2 class="w-4 h-4" />
-            格式化
+            <span>格式化</span>
+            <kbd class="hidden md:inline-flex items-center px-1 bg-white/20 text-white rounded text-[10px] font-mono leading-none select-none">
+              {{ isMac ? '⌘↵' : 'Ctrl+Enter' }}
+            </kbd>
           </button>
           <button
             @click="compressJson"
             class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5"
           >
             <Minimize2 class="w-4 h-4" />
-            压缩
+            <span>压缩</span>
+            <kbd class="hidden md:inline-flex items-center px-1 bg-gray-200 text-gray-400 rounded text-[10px] font-mono leading-none select-none">
+              {{ isMac ? '⌘⇧↵' : 'Ctrl+Shift+Enter' }}
+            </kbd>
           </button>
           <button
             @click="escapeJson"
@@ -386,9 +464,12 @@ useSeoMeta({
           
           <button
             @click="clearAll"
-            class="px-3 py-2 text-gray-500 hover:text-gray-700 text-sm transition-colors"
+            class="px-3 py-2 text-gray-500 hover:text-gray-700 text-sm transition-colors flex items-center gap-1"
           >
-            清空
+            <span>清空</span>
+            <kbd class="hidden md:inline-flex items-center px-1 bg-gray-100 text-gray-400 border border-gray-200 rounded text-[10px] font-mono leading-none select-none">
+              {{ isMac ? '⌥C' : 'Ctrl+D' }}
+            </kbd>
           </button>
         </div>
       </div>
@@ -424,6 +505,7 @@ useSeoMeta({
             <span class="text-xs text-gray-400">{{ inputJson.length }} 字符</span>
           </div>
           <textarea
+            ref="mainInput"
             v-model="inputJson"
             placeholder="在此输入 JSON 内容，或将文件拖拽至此..."
             class="w-full h-96 p-4 font-mono text-sm resize-none focus:outline-none"
@@ -448,9 +530,12 @@ useSeoMeta({
               <button
                 v-if="outputJson"
                 @click="applyOutput"
-                class="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                class="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 transition-colors"
               >
-                应用到输入
+                <span>应用到输入</span>
+                <kbd class="hidden md:inline-flex items-center px-1 bg-gray-100 text-gray-400 border border-gray-200 rounded text-[9px] font-mono leading-none select-none">
+                  {{ isMac ? '⌘⇧V' : 'Ctrl+Shift+V' }}
+                </kbd>
               </button>
               <button
                 v-if="outputJson"
@@ -459,7 +544,10 @@ useSeoMeta({
               >
                 <Check v-if="copied" class="w-3 h-3 text-green-600" />
                 <Copy v-else class="w-3 h-3" />
-                {{ copied ? '已复制' : '复制' }}
+                <span>{{ copied ? '已复制' : '复制' }}</span>
+                <kbd class="hidden md:inline-flex items-center px-1 bg-gray-100 text-gray-400 border border-gray-200 rounded text-[9px] font-mono leading-none select-none">
+                  {{ isMac ? '⌘⇧C' : 'Ctrl+Shift+C' }}
+                </kbd>
               </button>
             </div>
           </div>
@@ -481,13 +569,14 @@ useSeoMeta({
         <div class="flex items-center gap-2">
           <button
             @click="compareJsons"
-            class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5"
+            class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
           >
             <ArrowRightLeft class="w-4 h-4" />
-            开始对比
+            <span>开始对比</span>
+            <kbd class="hidden md:inline-flex items-center px-1 bg-white/20 text-white rounded text-[10px] font-mono leading-none select-none">Enter</kbd>
           </button>
           <button
-            @click="clearAll(); diffResult = null"
+            @click="clearAll(); diffResult = []"
             class="px-3 py-2 text-gray-500 hover:text-gray-700 text-sm transition-colors"
           >
             清空
@@ -589,6 +678,14 @@ useSeoMeta({
         <li>• <strong>差异对比</strong>：逐层对比两个 JSON 的差异</li>
       </ul>
     </div>
+
+    <!-- 快捷键说明模态框 -->
+    <ToolShortcutHelp 
+      :show="showShortcutHelp" 
+      :shortcuts="shortcuts" 
+      :is-mac="isMac" 
+      @close="showShortcutHelp = false" 
+    />
   </div>
 </template>
 

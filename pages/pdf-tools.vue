@@ -72,7 +72,7 @@ const mergePdfs = async () => {
     const { mergePdfs } = usePdfWorker()
     const pdfBytes = await mergePdfs(pdfMergeState.files)
     
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' })
+    const blob = new Blob([pdfBytes as any], { type: 'application/pdf' })
     
     downloadFile(blob, 'merged.pdf')
     showSuccess('PDF 合并成功！')

@@ -86,7 +86,7 @@ const imagesToPdf = async () => {
   try {
     const { imagesToPdf: runImagesToPdf } = usePdfWorker()
     const pdfBytes = await runImagesToPdf(imageToPdfState.files)
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' })
+    const blob = new Blob([pdfBytes as any], { type: 'application/pdf' })
     
     downloadFile(blob, 'images_to_pdf.pdf')
     showSuccess('图片转 PDF 成功！')

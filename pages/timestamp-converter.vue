@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { Clock, Play, Pause, Copy, Check, RefreshCw, Plus, Minus } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { Clock, Play, Pause, Copy, Check, RefreshCw, Plus, Minus, Keyboard } from 'lucide-vue-next'
 
 // SEO 元数据
 useSeoMeta({
@@ -351,6 +352,67 @@ onUnmounted(() => {
   if (timer) clearInterval(timer)
   if (offsetTimer) clearInterval(offsetTimer)
 })
+// 快捷键和自动聚焦支持
+const mainInput = ref<HTMLInputElement | null>(null)
+useAutoFocus(mainInput)
+
+const router = useRouter()
+const showShortcutHelp = ref(false)
+
+const triggerConvert = () => {
+  const activeEl = document.activeElement
+  if (activeEl && activeEl.getAttribute('id') === 'input-datetime-text') {
+    handleDateTimeConvert('text')
+  } else {
+    handleTimestampConvert()
+  }
+}
+
+const resetAll = () => {
+  const now = new Date()
+  inputTimestamp.value = Math.floor(now.getTime() / 1000).toString()
+  handleTimestampConvert()
+  inputDateTimeLocal.value = now.toISOString().slice(0, 16)
+  handleDateTimeConvert('picker')
+  clearMessages()
+}
+
+const copyCurrentSec = () => {
+  handleCopy(liveTimestampSec.value.toString(), 'liveSec')
+}
+
+const { isMac, shortcuts } = useShortcuts([
+  {
+    key: 'ctrl+enter',
+    description: '执行时间转换',
+    action: triggerConvert
+  },
+  {
+    key: 'ctrl+d',
+    description: '重置为当前时间',
+    action: resetAll
+  },
+  {
+    key: 'alt+c',
+    description: '重置为当前时间',
+    action: resetAll
+  },
+  {
+    key: 'ctrl+shift+c',
+    description: '复制当前秒级时间戳',
+    action: copyCurrentSec
+  },
+  {
+    key: '?',
+    description: '显示快捷键帮助',
+    action: () => { showShortcutHelp.value = true }
+  },
+  {
+    key: 'esc',
+    description: '返回首页',
+    action: () => router.push('/')
+  }
+])
 </script>
 
 <template>
@@ -360,6 +422,33 @@ onUnmounted(() => {
       title="时间戳转换"
       description="Unix 时间戳与本地时间、UTC 时间双向转换。纯本地运算，不将任何时间数据上传至网络，保护您的调试隐私。"
     />
+
+    <!-- 顶栏快捷操作 -->
+    <div class="bg-white rounded-xl border border-gray-200 p-4 flex flex-wrap justify-between items-center gap-4">
+      <div class="flex items-center gap-2 text-xs text-gray-500 font-medium">
+        <Keyboard class="w-3.5 h-3.5 text-gray-400" />
+        <span>支持快捷键。转换当前输入：<kbd class="font-mono bg-gray-100 border px-1 rounded text-[10px] shadow-sm">Ctrl+Enter</kbd> | 重置时间：<kbd class="font-mono bg-gray-100 border px-1 rounded text-[10px] shadow-sm">Ctrl+D</kbd></span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button
+          @click="resetAll"
+          class="px-3 py-1.5 text-gray-500 hover:bg-gray-50 border border-gray-100 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 bg-white shadow-sm"
+        >
+          <RefreshCw class="w-4 h-4" />
+          <span>重置时间</span>
+          <kbd class="hidden md:inline-flex items-center px-1 bg-gray-100 text-gray-400 border border-gray-200 rounded text-[9px] font-mono leading-none select-none">
+            {{ isMac ? '⌘D' : 'Ctrl+D' }}
+          </kbd>
+        </button>
+        <button
+          @click="showShortcutHelp = true"
+          class="px-3 py-1.5 text-gray-500 hover:bg-gray-50 border border-gray-200 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 bg-white shadow-sm"
+        >
+          <Keyboard class="w-4 h-4" />
+          <span>快捷键说明 (按 <kbd class="font-mono bg-white border border-gray-200 px-1 rounded text-[10px] shadow-sm">?</kbd>)</span>
+        </button>
+      </div>
+    </div>
 
     <!-- 信息提示组件 -->
     <ToolFeedback :error-message="errorMessage" :success-message="successMessage" />
@@ -469,6 +558,7 @@ onUnmounted(() => {
           <div class="flex gap-2">
             <div class="relative flex-1">
               <input
+                ref="mainInput"
                 v-model="inputTimestamp"
                 type="text"
                 placeholder="请输入 Unix 时间戳..."
@@ -485,10 +575,13 @@ onUnmounted(() => {
             </div>
             <button
               @click="handleTimestampConvert"
-              class="px-4 py-2.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl font-semibold text-sm transition-colors flex items-center gap-1.5"
+              class="px-4 py-2.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl font-semibold text-sm transition-colors flex items-center gap-1.5 shadow-sm"
             >
-              <RefreshCw class="h-4 w-4" />
-              转换
+              <RefreshCw class="w-4 h-4" />
+              <span>转换</span>
+              <kbd class="hidden md:inline-flex items-center px-1 bg-blue-100 text-blue-700 rounded text-[10px] font-mono leading-none select-none">
+                {{ isMac ? '⌘↵' : 'Ctrl+Enter' }}
+              </kbd>
             </button>
           </div>
 
@@ -735,6 +828,14 @@ onUnmounted(() => {
       </div>
 
     </div>
+
+    <!-- 快捷键说明模态框 -->
+    <ToolShortcutHelp 
+      :show="showShortcutHelp" 
+      :shortcuts="shortcuts" 
+      :is-mac="isMac" 
+      @close="showShortcutHelp = false" 
+    />
   </div>
 </template>
 

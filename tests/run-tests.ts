@@ -79,6 +79,34 @@ const run = () => {
   assert.match(stringifiedProp, /nested.foo=bar/)
   assert.match(stringifiedProp, /nested.arr.0=1/)
 
+  // SQL Minify Test
+  const { minifySql } = require('../utils/sql-minify')
+
+  // 1. 分号隔开的 SQL，每句压缩成一行
+  const sql1 = 'SELECT * FROM users; SELECT * FROM orders;'
+  assert.equal(minifySql(sql1), 'SELECT * FROM users;\nSELECT * FROM orders;')
+
+  // 2. 带注释的 SQL，不删注释且各占一行
+  const sql2 = `
+    -- 获取用户列表
+    SELECT * FROM users; -- 这里是行尾注释
+    /* 获取订单
+       多行注释测试 */
+    SELECT * FROM orders;
+  `
+  const expected2 = [
+    '-- 获取用户列表',
+    'SELECT * FROM users;',
+    '-- 这里是行尾注释',
+    '/* 获取订单 多行注释测试 */',
+    'SELECT * FROM orders;'
+  ].join('\n')
+  assert.equal(minifySql(sql2), expected2)
+
+  // 3. 带有分号和注释符号的字符串，不应被拆行或误判为注释
+  const sql3 = "SELECT 'hello;world', \"test -- comment\", `a#b` FROM users;"
+  assert.equal(minifySql(sql3), "SELECT 'hello;world', \"test -- comment\", `a#b` FROM users;")
+
   console.log('tests passed')
 }
 

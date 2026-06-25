@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive, watch, computed } from 'vue'
-import { Copy, Check, RotateCcw, Play, Sparkles, AlertCircle, HelpCircle, ArrowRight } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { Copy, Check, RotateCcw, Play, Sparkles, AlertCircle, HelpCircle, ArrowRight, Keyboard } from 'lucide-vue-next'
 import { useStorage } from '@vueuse/core'
 import cronstrue from 'cronstrue'
 import 'cronstrue/locales/zh_CN'
@@ -339,6 +340,52 @@ const copyExpression = async () => {
     showError('复制失败，请手动选择复制')
   }
 }
+// 快捷键和自动聚焦支持
+const mainInput = ref<HTMLInputElement | null>(null)
+useAutoFocus(mainInput)
+
+const router = useRouter()
+const showShortcutHelp = ref(false)
+
+const resetAll = () => {
+  cronExpression.value = '*/5 * * * *'
+  secondsEnabled.value = false
+  parseAndFillForm('*/5 * * * *')
+  parseExpression()
+}
+
+const { isMac, shortcuts } = useShortcuts([
+  {
+    key: 'ctrl+enter',
+    description: '解析并预测时间',
+    action: parseExpression
+  },
+  {
+    key: 'ctrl+d',
+    description: '重置为默认表达式',
+    action: resetAll
+  },
+  {
+    key: 'alt+c',
+    description: '重置为默认表达式',
+    action: resetAll
+  },
+  {
+    key: 'ctrl+shift+c',
+    description: '复制 Cron 表达式',
+    action: copyExpression
+  },
+  {
+    key: '?',
+    description: '显示快捷键帮助',
+    action: () => { showShortcutHelp.value = true }
+  },
+  {
+    key: 'esc',
+    description: '返回首页',
+    action: () => router.push('/')
+  }
+])
 </script>
 
 <template>
@@ -352,9 +399,18 @@ const copyExpression = async () => {
 
     <!-- 顶部快捷模板 -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
-      <div class="flex items-center gap-2 mb-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-        <Sparkles class="w-3.5 h-3.5 text-emerald-500" />
-        快捷应用模板
+      <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+        <div class="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          <Sparkles class="w-3.5 h-3.5 text-emerald-500" />
+          快捷应用模板
+        </div>
+        <button 
+          @click="showShortcutHelp = true"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors border border-gray-200/50 shadow-sm"
+        >
+          <Keyboard class="w-3.5 h-3.5" />
+          <span>快捷键说明 (按 <kbd class="font-mono bg-white border border-gray-200 px-1 rounded shadow-sm text-[10px]">?</kbd>)</span>
+        </button>
       </div>
       <div class="flex flex-wrap gap-2">
         <button
@@ -695,6 +751,7 @@ const copyExpression = async () => {
           </div>
           <div class="relative flex items-stretch">
             <input
+              ref="mainInput"
               type="text"
               v-model="cronExpression"
               placeholder="请输入或在这里修改 Cron 表达式..."
@@ -707,7 +764,10 @@ const copyExpression = async () => {
             >
               <Check v-if="copied" class="w-4 h-4" />
               <Copy v-else class="w-4 h-4" />
-              复制
+              <span>复制</span>
+              <kbd class="hidden md:inline-flex items-center px-1 bg-white/20 text-white rounded text-[9px] font-mono leading-none select-none">
+                {{ isMac ? '⌘⇧C' : 'Ctrl+Shift+C' }}
+              </kbd>
             </button>
           </div>
         </div>
@@ -779,6 +839,14 @@ const copyExpression = async () => {
       </div>
 
     </div>
+
+    <!-- 快捷键说明模态框 -->
+    <ToolShortcutHelp 
+      :show="showShortcutHelp" 
+      :shortcuts="shortcuts" 
+      :is-mac="isMac" 
+      @close="showShortcutHelp = false" 
+    />
   </div>
 </template>
 

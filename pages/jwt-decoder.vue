@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { Copy, Check, RotateCcw, ShieldCheck, ShieldAlert, Key, Sparkles } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { Copy, Check, RotateCcw, ShieldCheck, ShieldAlert, Key, Sparkles, Keyboard } from 'lucide-vue-next'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/github.css'
 import { parseJwt, type JwtParsedResult } from '../utils/jwt-tools'
@@ -265,6 +266,51 @@ useSeoMeta({
   description: '纯本地 JSON Web Token (JWT) 解析与解码工具。实时美化并高亮 Header 和 Payload，计算过期状态，支持本地 HMAC-SHA256 签名校验。',
   keywords: 'JWT解析, JWT解码, JSON Web Token, JWT校验, HS256, 密码学, 本地工具'
 })
+// 快捷键和自动聚焦支持
+const mainInput = ref<HTMLTextAreaElement | null>(null)
+useAutoFocus(mainInput)
+
+const router = useRouter()
+const showShortcutHelp = ref(false)
+
+const copyOutput = async () => {
+  if (parsedJwt.value?.success && parsedJwt.value.payload) {
+    await copyContent(JSON.stringify(parsedJwt.value.payload, null, 2), 'payload')
+  }
+}
+
+const { isMac, shortcuts } = useShortcuts([
+  {
+    key: 'ctrl+enter',
+    description: '解析 Token',
+    action: handleTokenInput
+  },
+  {
+    key: 'ctrl+d',
+    description: '清空内容',
+    action: clearAll
+  },
+  {
+    key: 'alt+c',
+    description: '清空内容',
+    action: clearAll
+  },
+  {
+    key: 'ctrl+shift+c',
+    description: '复制 Payload 结果',
+    action: copyOutput
+  },
+  {
+    key: '?',
+    description: '显示快捷键帮助',
+    action: () => { showShortcutHelp.value = true }
+  },
+  {
+    key: 'esc',
+    description: '返回首页',
+    action: () => router.push('/')
+  }
+])
 </script>
 
 <template>
@@ -279,19 +325,31 @@ useSeoMeta({
       <div class="flex items-center gap-2">
         <button
           @click="loadExample"
-          class="flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100/80 rounded-lg transition-colors border border-indigo-100"
+          class="flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100/80 rounded-lg transition-colors border border-indigo-100 shadow-sm"
         >
           <Sparkles class="w-4 h-4" />
           加载校验示例
         </button>
       </div>
-      <button
-        @click="clearAll"
-        class="px-3.5 py-2 border border-gray-200 hover:bg-gray-50 text-gray-600 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 bg-white"
-      >
-        <RotateCcw class="w-4 h-4" />
-        清空
-      </button>
+      <div class="flex items-center gap-2">
+        <button
+          @click="clearAll"
+          class="px-3.5 py-2 border border-gray-200 hover:bg-gray-50 text-gray-600 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 bg-white shadow-sm"
+        >
+          <RotateCcw class="w-4 h-4" />
+          <span>清空</span>
+          <kbd class="hidden md:inline-flex items-center px-1 bg-gray-100 text-gray-400 border border-gray-200 rounded text-[9px] font-mono leading-none select-none">
+            {{ isMac ? '⌘D' : 'Ctrl+D' }}
+          </kbd>
+        </button>
+        <button 
+          @click="showShortcutHelp = true"
+          class="px-3.5 py-2 border border-gray-200 hover:bg-gray-50 text-gray-600 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 bg-white shadow-sm"
+        >
+          <Keyboard class="w-4 h-4" />
+          <span>快捷键说明 (按 <kbd class="font-mono bg-white border border-gray-200 px-1 rounded text-[10px] shadow-sm">?</kbd>)</span>
+        </button>
+      </div>
     </div>
 
     <!-- 消息提示 -->
@@ -320,6 +378,7 @@ useSeoMeta({
             </button>
           </div>
           <textarea
+            ref="mainInput"
             v-model="jwtToken"
             @input="handleTokenInput"
             placeholder="在此粘贴您的 JWT Token (格式：Header.Payload.Signature)..."
@@ -477,6 +536,14 @@ useSeoMeta({
         <li>• <strong>代码高亮</strong>：借助 `highlight.js` 将 JSON 进行语义美化着色，提升可读性。</li>
       </ul>
     </div>
+
+    <!-- 快捷键说明模态框 -->
+    <ToolShortcutHelp 
+      :show="showShortcutHelp" 
+      :shortcuts="shortcuts" 
+      :is-mac="isMac" 
+      @close="showShortcutHelp = false" 
+    />
   </div>
 </template>
 

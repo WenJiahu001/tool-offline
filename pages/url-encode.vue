@@ -96,7 +96,7 @@ const parseUrl = () => {
     }
     const url = new URL(urlStr)
 
-    parseResult.value = {
+    const result = {
       protocol: url.protocol,
       hostname: url.hostname,
       port: url.port || '默认',
@@ -109,12 +109,14 @@ const parseUrl = () => {
 
     // 解析查询参数
     url.searchParams.forEach((value, key) => {
-      parseResult.value.params.push({
+      result.params.push({
         key,
         value,
         encoded: encodeURIComponent(key) + '=' + encodeURIComponent(value)
       })
     })
+
+    parseResult.value = result
 
     showSuccess('URL 解析成功')
   } catch {
@@ -201,13 +203,76 @@ useSeoMeta({
   description: '在线 URL 编码解码工具，支持 URL 编码、解码、查询参数解析。纯本地处理，数据安全。',
   keywords: 'URL编码, URL解码, urlencode, urldecode, URI编码, 查询参数解析, 在线工具'
 })
+// 快捷键和自动聚焦支持
+const mainInput = ref<HTMLTextAreaElement | null>(null)
+useAutoFocus(mainInput)
+
+const router = useRouter()
+const showShortcutHelp = ref(false)
+
+const triggerAction = () => {
+  if (activeMode.value === 'encode') {
+    encodeUrl()
+  } else if (activeMode.value === 'decode') {
+    decodeUrl()
+  } else {
+    parseUrl()
+  }
+}
+
+const { isMac, shortcuts } = useShortcuts([
+  {
+    key: 'ctrl+enter',
+    description: '执行 编码 / 解码 / 解析',
+    action: triggerAction
+  },
+  {
+    key: 'ctrl+d',
+    description: '清空内容',
+    action: clearAll
+  },
+  {
+    key: 'alt+c',
+    description: '清空内容',
+    action: clearAll
+  },
+  {
+    key: 'ctrl+shift+c',
+    description: '复制输出结果',
+    action: copyOutput
+  },
+  {
+    key: 'ctrl+shift+v',
+    description: '应用输出到输入',
+    action: applyOutput
+  },
+  {
+    key: '?',
+    description: '显示快捷键帮助',
+    action: () => { showShortcutHelp.value = true }
+  },
+  {
+    key: 'esc',
+    description: '返回首页',
+    action: () => router.push('/')
+  }
+])
 </script>
 
 <template>
   <div class="px-6 py-8 max-w-5xl mx-auto">
-    <div class="mb-6">
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">URL 编解码工具</h1>
-      <p class="text-gray-500">URL 编码、解码、查询参数解析</p>
+    <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">URL 编解码工具</h1>
+        <p class="text-gray-500">URL 编码、解码、查询参数解析</p>
+      </div>
+      <button 
+        @click="showShortcutHelp = true"
+        class="flex items-center gap-1.5 self-start px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors border border-gray-200/50"
+      >
+        <Keyboard class="w-3.5 h-3.5" />
+        <span>快捷键说明 (按 <kbd class="font-mono bg-white border border-gray-200 px-1 rounded shadow-sm text-[10px]">?</kbd>)</span>
+      </button>
     </div>
 
     <!-- 模式切换 -->
@@ -268,18 +333,24 @@ useSeoMeta({
           <button
             v-if="activeMode === 'encode'"
             @click="encodeUrl"
-            class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5"
+            class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
           >
             <Link class="w-4 h-4" />
-            编码
+            <span>编码</span>
+            <kbd class="hidden md:inline-flex items-center px-1 bg-white/20 text-white rounded text-[10px] font-mono leading-none select-none">
+              {{ isMac ? '⌘↵' : 'Ctrl+Enter' }}
+            </kbd>
           </button>
           <button
             v-if="activeMode === 'decode'"
             @click="decodeUrl"
-            class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5"
+            class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
           >
             <Unlink class="w-4 h-4" />
-            解码
+            <span>解码</span>
+            <kbd class="hidden md:inline-flex items-center px-1 bg-white/20 text-white rounded text-[10px] font-mono leading-none select-none">
+              {{ isMac ? '⌘↵' : 'Ctrl+Enter' }}
+            </kbd>
           </button>
           <button
             @click="swapDirection"
@@ -319,7 +390,10 @@ useSeoMeta({
             class="px-3 py-2 text-gray-500 hover:text-gray-700 text-sm transition-colors flex items-center gap-1.5"
           >
             <RotateCcw class="w-4 h-4" />
-            清空
+            <span>清空</span>
+            <kbd class="hidden md:inline-flex items-center px-1 bg-gray-100 text-gray-400 border border-gray-200 rounded text-[9px] font-mono leading-none select-none">
+              {{ isMac ? '⌘D' : 'Ctrl+D' }}
+            </kbd>
           </button>
         </div>
       </div>
@@ -361,6 +435,7 @@ useSeoMeta({
             <span class="text-xs text-gray-400">{{ inputText.length }} 字符</span>
           </div>
           <textarea
+            ref="mainInput"
             v-model="inputText"
             :placeholder="activeMode === 'encode' ? '输入需要编码的 URL 或文本...' : '输入需要解码的编码字符串...'"
             class="w-full h-72 p-4 font-mono text-sm resize-none focus:outline-none"
@@ -385,9 +460,12 @@ useSeoMeta({
               <button
                 v-if="outputText"
                 @click="applyOutput"
-                class="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                class="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 transition-colors"
               >
-                应用到输入
+                <span>应用到输入</span>
+                <kbd class="hidden md:inline-flex items-center px-1 bg-gray-100 text-gray-400 border border-gray-200 rounded text-[9px] font-mono leading-none select-none ml-1">
+                  {{ isMac ? '⌘⇧V' : 'Ctrl+Shift+V' }}
+                </kbd>
               </button>
               <button
                 v-if="outputText"
@@ -396,7 +474,10 @@ useSeoMeta({
               >
                 <Check v-if="copied" class="w-3 h-3 text-green-600" />
                 <Copy v-else class="w-3 h-3" />
-                {{ copied ? '已复制' : '复制' }}
+                <span>{{ copied ? '已复制' : '复制' }}</span>
+                <kbd class="hidden md:inline-flex items-center px-1 bg-gray-100 text-gray-400 border border-gray-200 rounded text-[9px] font-mono leading-none select-none ml-1">
+                  {{ isMac ? '⌘⇧C' : 'Ctrl+Shift+C' }}
+                </kbd>
               </button>
             </div>
           </div>
@@ -418,19 +499,25 @@ useSeoMeta({
         <div class="flex items-center gap-2">
           <button
             @click="parseUrl"
-            class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5"
+            class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            解析 URL
+            <span>解析 URL</span>
+            <kbd class="hidden md:inline-flex items-center px-1 bg-white/20 text-white rounded text-[10px] font-mono leading-none select-none">
+              {{ isMac ? '⌘↵' : 'Ctrl+Enter' }}
+            </kbd>
           </button>
           <button
             @click="clearAll"
             class="px-3 py-2 text-gray-500 hover:text-gray-700 text-sm transition-colors flex items-center gap-1.5"
           >
             <RotateCcw class="w-4 h-4" />
-            清空
+            <span>清空</span>
+            <kbd class="hidden md:inline-flex items-center px-1 bg-gray-100 text-gray-400 border border-gray-200 rounded text-[9px] font-mono leading-none select-none">
+              {{ isMac ? '⌘D' : 'Ctrl+D' }}
+            </kbd>
           </button>
         </div>
       </div>
@@ -448,8 +535,9 @@ useSeoMeta({
           <span class="text-xs text-gray-400">{{ inputText.length }} 字符</span>
         </div>
         <textarea
+          ref="mainInput"
           v-model="inputText"
-          placeholder="输入需要解析的 URL，例如：https://example.com/path?name=张三&age=20#section"
+          placeholder="输入需要解析 the URL，例如：https://example.com/path?name=张三&age=20#section"
           class="w-full h-28 p-4 font-mono text-sm resize-none focus:outline-none"
           spellcheck="false"
         ></textarea>
@@ -546,5 +634,13 @@ useSeoMeta({
         <li>• 所有处理均在浏览器本地完成，数据不会上传至服务器</li>
       </ul>
     </div>
+
+    <!-- 快捷键说明模态框 -->
+    <ToolShortcutHelp 
+      :show="showShortcutHelp" 
+      :shortcuts="shortcuts" 
+      :is-mac="isMac" 
+      @close="showShortcutHelp = false" 
+    />
   </div>
 </template>

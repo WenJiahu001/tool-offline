@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Code2, FileText, Image as ImageIcon, QrCode, ScanSearch, Shield, WandSparkles, Clock, Key, Binary } from 'lucide-vue-next'
+import { ref, onMounted, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
+import { Code2, FileText, Image as ImageIcon, QrCode, ScanSearch, Shield, WandSparkles, Clock, Key, Binary, Search, HelpCircle, Keyboard, Database } from 'lucide-vue-next'
 
 useSeoMeta({
   title: 'LocalTools - 免费且安全的在线图片处理与PDF工具箱',
@@ -7,7 +9,116 @@ useSeoMeta({
   keywords: '在线工具, 本地工具, 图片压缩, PDF合并, 图片转PDF, 免费工具, 数据安全'
 })
 
-const { categorizedTools } = useTools()
+const router = useRouter()
+const { categorizedTools, searchQuery, tools } = useTools()
+
+const searchInput = ref<HTMLInputElement | null>(null)
+const isMac = ref(false)
+
+if (typeof window !== 'undefined') {
+  isMac.value = /Mac|iPod|iPad|iPhone/i.test(navigator.platform)
+}
+
+// 自动聚焦搜索框
+useAutoFocus(searchInput)
+
+// 全局 Ctrl+K 聚焦搜索框
+useShortcuts([
+  {
+    key: 'ctrl+k',
+    description: '聚焦搜索框',
+    action: () => {
+      if (searchInput.value) {
+        searchInput.value.focus()
+        searchInput.value.select()
+      }
+    },
+    disabledInInput: false // 输入框中按 Ctrl+K 也允许聚焦
+  }
+])
+
+// 搜索框回车：如果过滤后有工具，跳转至第一个工具
+const handleSearchEnter = () => {
+  if (categorizedTools.value.length > 0 && categorizedTools.value[0].tools.length > 0) {
+    const targetTool = categorizedTools.value[0].tools[0]
+    router.push(targetTool.route)
+  }
+}
+
+// 几何位置导航聚焦
+const moveFocus = (direction: 'up' | 'down' | 'left' | 'right') => {
+  const cards = Array.from(document.querySelectorAll('.tool-card')) as HTMLElement[]
+  if (cards.length === 0) return
+
+  const activeEl = document.activeElement as HTMLElement
+  const activeIndex = cards.indexOf(activeEl)
+
+  if (activeIndex === -1) {
+    // 如果焦点不在任何卡片上，且从搜索框往下按，则聚焦第一个卡片
+    if (direction === 'down') {
+      cards[0]?.focus()
+    }
+    return
+  }
+
+  const activeRect = activeEl.getBoundingClientRect()
+  let bestTarget: HTMLElement | null = null
+  let minDistance = Infinity
+
+  cards.forEach(card => {
+    if (card === activeEl) return
+    const rect = card.getBoundingClientRect()
+
+    let isCorrectDirection = false
+    let distance = 0
+
+    const activeCenterX = activeRect.left + activeRect.width / 2
+    const activeCenterY = activeRect.top + activeRect.height / 2
+    const cardCenterX = rect.left + rect.width / 2
+    const cardCenterY = rect.top + rect.height / 2
+
+    const dx = cardCenterX - activeCenterX
+    const dy = cardCenterY - activeCenterY
+
+    // 几何距离计算：按移动方向偏重对应轴的距离，并对另一轴做偏移惩罚
+    if (direction === 'right' && dx > 5) {
+      isCorrectDirection = true
+      distance = dx + Math.abs(dy) * 2
+    } else if (direction === 'left' && dx < -5) {
+      isCorrectDirection = true
+      distance = -dx + Math.abs(dy) * 2
+    } else if (direction === 'down' && dy > 5) {
+      isCorrectDirection = true
+      distance = dy + Math.abs(dx) * 2
+    } else if (direction === 'up' && dy < -5) {
+      isCorrectDirection = true
+      distance = -dy + Math.abs(dx) * 2
+    }
+
+    if (isCorrectDirection && distance < minDistance) {
+      minDistance = distance
+      bestTarget = card
+    }
+  })
+
+  if (bestTarget) {
+    ;(bestTarget as HTMLElement).focus()
+  } else if (direction === 'up' && searchInput.value) {
+    // 向上无卡片时聚焦搜索框
+    searchInput.value.focus()
+  }
+}
+
+// 处理首页网格键盘事件
+const handleGridKeyDown = (e: KeyboardEvent) => {
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+    e.preventDefault()
+    if (e.key === 'ArrowUp') moveFocus('up')
+    if (e.key === 'ArrowDown') moveFocus('down')
+    if (e.key === 'ArrowLeft') moveFocus('left')
+    if (e.key === 'ArrowRight') moveFocus('right')
+  }
+}
 
 const categoryIcons = {
   '图片工具': ImageIcon,
@@ -30,18 +141,70 @@ const toolIcons = {
   clock: Clock,
   key: Key,
   binary: Binary,
+  database: Database
 }
 </script>
 
 <template>
-  <div class="p-4 sm:p-6 md:p-8">
+  <div class="p-4 sm:p-6 md:p-8" @keydown="handleGridKeyDown">
     <div class="max-w-[90rem] mx-auto">
+      <!-- 搜索和快捷键指引栏 -->
+      <div class="mb-10 max-w-2xl mx-auto text-center space-y-4">
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
+          极速、安全、纯本地的处理工具箱
+        </h1>
+        <p class="text-gray-500 text-sm sm:text-base">
+          所有操作均在浏览器内本地执行，数据完全不上传服务器，保护您的隐私安全。
+        </p>
+
+        <!-- 极简流光搜索框 -->
+        <div class="relative group mt-6">
+          <div class="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl blur opacity-20 group-focus-within:opacity-40 transition duration-300"></div>
+          <div class="relative bg-white rounded-xl border border-gray-200/80 shadow-sm flex items-center px-4 py-3.5 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
+            <Search class="w-5 h-5 text-gray-400 mr-3" />
+            <input
+              ref="searchInput"
+              v-model="searchQuery"
+              type="text"
+              placeholder="搜索本地工具... (按 Enter 直接进入首个结果)"
+              class="w-full text-gray-700 placeholder-gray-400 bg-transparent outline-none text-sm sm:text-base"
+              @keydown.enter="handleSearchEnter"
+              @keydown.down.prevent="moveFocus('down')"
+            />
+            <div class="flex items-center gap-1.5 ml-2">
+              <kbd class="hidden sm:inline-flex items-center px-2 py-0.5 text-[11px] font-semibold text-gray-400 bg-gray-50 border border-gray-200 rounded-md font-mono shadow-sm">
+                {{ isMac ? '⌘' : 'Ctrl' }} + K
+              </kbd>
+            </div>
+          </div>
+        </div>
+
+        <!-- 快捷操作小提示 -->
+        <div class="flex items-center justify-center gap-4 text-xs text-gray-400 mt-2 font-medium">
+          <span class="flex items-center gap-1">
+            <Keyboard class="w-3.5 h-3.5" />
+            方向键 & Tab 导航卡片
+          </span>
+          <span class="flex items-center gap-1">
+            <kbd class="px-1.5 py-0.5 bg-gray-100 border border-gray-200 rounded text-[10px] font-mono">Enter</kbd>
+            进入工具
+          </span>
+        </div>
+      </div>
+
+      <!-- 空搜索结果 -->
+      <div v-if="categorizedTools.length === 0" class="text-center py-16 text-gray-500">
+        <HelpCircle class="w-12 h-12 text-gray-300 mx-auto mb-3" />
+        <p class="text-base font-semibold">没有找到匹配的工具</p>
+        <p class="text-xs text-gray-400 mt-1">请尝试搜索其他关键字</p>
+      </div>
+
       <!-- 分类工具列表 -->
       <div v-for="category in categorizedTools" :key="category.name" class="mb-10">
         <!-- 分类标题 -->
         <div class="flex items-center gap-3 mb-5">
           <div class="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 flex items-center justify-center">
-            <component :is="categoryIcons[category.name]" class="h-5 w-5" />
+            <component :is="categoryIcons[category.name as keyof typeof categoryIcons]" class="h-5 w-5" />
           </div>
           <div>
             <h2 class="text-lg font-bold text-gray-900">{{ category.name }}</h2>
@@ -55,15 +218,16 @@ const toolIcons = {
             v-for="tool in category.tools"
             :key="tool.route"
             :to="tool.route"
-            class="group relative bg-white rounded-xl p-4 sm:p-5 shadow-sm hover:shadow-xl border border-gray-100 transition-all duration-300 flex flex-col items-start overflow-hidden active:scale-95"
+            tabindex="0"
+            class="tool-card group relative bg-white rounded-xl p-4 sm:p-5 shadow-sm border border-gray-100 transition-all duration-300 flex flex-col items-start overflow-hidden active:scale-95 hover:shadow-xl hover:border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:scale-[1.03] focus:shadow-md"
           >
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r" :class="tool.gradient"></div>
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300" :class="[tool.iconBg, tool.iconColor]">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 group-focus:scale-110 transition-transform duration-300" :class="[tool.iconBg, tool.iconColor]">
               <component :is="toolIcons[tool.icon as keyof typeof toolIcons]" class="h-5 w-5" />
             </div>
             <h3 class="text-base font-bold text-gray-900 mb-1.5 transition-colors" :class="tool.hoverColor">{{ tool.name }}</h3>
             <p class="text-gray-500 text-xs sm:text-sm leading-relaxed line-clamp-2">{{ tool.description }}</p>
-            <div class="mt-auto pt-3 flex items-center text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0" :class="tool.iconColor">
+            <div class="mt-auto pt-3 flex items-center text-xs font-semibold opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 group-focus:translate-y-0" :class="tool.iconColor">
               立即开始 <span class="ml-1">&rarr;</span>
             </div>
           </NuxtLink>
