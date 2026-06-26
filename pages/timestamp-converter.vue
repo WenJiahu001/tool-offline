@@ -405,7 +405,7 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
 </script>
 
 <template>
-  <div class="max-w-6xl mx-auto px-4 py-6 sm:py-8 space-y-6">
+  <div class="max-w-[98%] xl:max-w-[95%] mx-auto px-3 py-4 space-y-3">
     <!-- 头部组件 -->
     <ToolPageHeader
       title="时间戳转换"
@@ -413,17 +413,16 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
     />
 
     <!-- 顶栏快捷操作 -->
-    <div class="bg-white rounded-xl border border-gray-200 p-4 flex flex-wrap justify-between items-center gap-4">
+    <div class="bg-white rounded-xl border border-gray-200 p-2 px-3 flex flex-wrap justify-between items-center gap-3">
       <div class="flex items-center gap-2 text-xs text-gray-500 font-medium">
         <Keyboard class="w-3.5 h-3.5 text-gray-400" />
         <span>支持快捷键。转换当前输入：<kbd class="font-mono bg-gray-100 border px-1 rounded text-[10px] shadow-sm">Ctrl+Enter</kbd> | 重置时间：<kbd class="font-mono bg-gray-100 border px-1 rounded text-[10px] shadow-sm">Ctrl+D</kbd></span>
       </div>
-      <div class="flex items-center gap-2">
         <button
           @click="resetAll"
-          class="px-3 py-1.5 text-gray-500 hover:bg-gray-50 border border-gray-100 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 bg-white shadow-sm"
+          class="px-2.5 py-1 text-gray-500 hover:bg-gray-50 border border-gray-100 text-xs font-medium rounded-lg transition-colors flex items-center gap-1 bg-white shadow-sm"
         >
-          <RefreshCw class="w-4 h-4" />
+          <RefreshCw class="w-3.5 h-3.5" />
           <span>重置时间</span>
           <kbd class="hidden md:inline-flex items-center px-1 bg-gray-100 text-gray-400 border border-gray-200 rounded text-[9px] font-mono leading-none select-none">
             {{ isMac ? '⌘D' : 'Ctrl+D' }}
@@ -431,12 +430,11 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
         </button>
         <button
           @click="showShortcutHelp = true"
-          class="px-3 py-1.5 text-gray-500 hover:bg-gray-50 border border-gray-200 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 bg-white shadow-sm"
+          class="px-2.5 py-1 text-gray-500 hover:bg-gray-50 border border-gray-200 text-xs font-medium rounded-lg transition-colors flex items-center gap-1 shadow-sm bg-white"
         >
-          <Keyboard class="w-4 h-4" />
-          <span>快捷键说明</span>
+          <Keyboard class="w-3.5 h-3.5" />
+          <span>快捷键</span>
         </button>
-      </div>
     </div>
 
     <!-- 信息提示组件 -->
@@ -446,7 +444,7 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       
       <!-- 实时时间卡片 (左侧 1/3) -->
-      <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-6 shadow-xl flex flex-col justify-between border border-slate-700/50 min-h-[350px]">
+      <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-xl p-4 shadow-lg flex flex-col justify-between border border-slate-700/50 min-h-[280px]">
         <div>
           <div class="flex items-center justify-between mb-4">
             <span class="text-xs font-semibold px-2.5 py-1 bg-slate-800/80 rounded-full border border-slate-700 text-cyan-400 flex items-center gap-1.5">
@@ -516,10 +514,10 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
       </div>
 
       <!-- 双向转换与计算区域 (右侧 2/3) -->
-      <div class="lg:col-span-2 space-y-6">
+      <div class="lg:col-span-2 space-y-4">
 
         <!-- 模块一：时间戳 ➡️ 日期时间 -->
-        <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4">
+        <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm space-y-3">
           <div class="flex items-center justify-between pb-3 border-b border-gray-100">
             <h3 class="font-bold text-gray-900 flex items-center gap-2">
               <span class="w-1.5 h-4 bg-blue-600 rounded-full"></span>
@@ -614,7 +612,7 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
         </div>
 
         <!-- 模块二：日期时间 ➡️ 时间戳 -->
-        <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4">
+        <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm space-y-3">
           <h3 class="font-bold text-gray-900 pb-3 border-b border-gray-100 flex items-center gap-2">
             <span class="w-1.5 h-4 bg-indigo-600 rounded-full"></span>
             北京时间 ➡️ 时间戳
@@ -697,7 +695,7 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
         </div>
 
         <!-- 模块三：时间偏移量计算 -->
-        <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4">
+        <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm space-y-3">
           <h3 class="font-bold text-gray-900 pb-3 border-b border-gray-100 flex items-center gap-2">
             <span class="w-1.5 h-4 bg-emerald-600 rounded-full"></span>
             时间快捷偏移计算

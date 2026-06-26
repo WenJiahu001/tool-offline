@@ -303,29 +303,29 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
 </script>
 
 <template>
-  <div class="px-6 py-8 max-w-6xl mx-auto">
+  <div class="max-w-[98%] xl:max-w-[95%] mx-auto space-y-3 px-3 py-4">
     <ToolPageHeader
       title="JWT 解析工具"
       description="本地解码 JSON Web Token，提取 Header、Payload 并支持签名比对。所有解析都在本地进行，绝不上传服务器。"
     />
 
     <!-- 顶栏操作 -->
-    <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+    <div class="flex items-center justify-between flex-wrap gap-2">
       <div class="flex items-center gap-2">
         <button
           @click="loadExample"
-          class="flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100/80 rounded-lg transition-colors border border-indigo-100 shadow-sm"
+          class="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100/80 rounded-lg transition-colors border border-indigo-100 shadow-sm"
         >
-          <Sparkles class="w-4 h-4" />
+          <Sparkles class="w-3.5 h-3.5" />
           加载校验示例
         </button>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1.5">
         <button
           @click="clearAll"
-          class="px-3.5 py-2 border border-gray-200 hover:bg-gray-50 text-gray-600 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 bg-white shadow-sm"
+          class="px-2.5 py-1 border border-gray-200 hover:bg-gray-50 text-gray-600 text-xs font-medium rounded-lg transition-colors flex items-center gap-1 bg-white shadow-sm"
         >
-          <RotateCcw class="w-4 h-4" />
+          <RotateCcw class="w-3.5 h-3.5" />
           <span>清空</span>
           <kbd class="hidden md:inline-flex items-center px-1 bg-gray-100 text-gray-400 border border-gray-200 rounded text-[9px] font-mono leading-none select-none">
             {{ isMac ? '⌘D' : 'Ctrl+D' }}
@@ -333,10 +333,10 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
         </button>
         <button 
           @click="showShortcutHelp = true"
-          class="px-3.5 py-2 border border-gray-200 hover:bg-gray-50 text-gray-600 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 bg-white shadow-sm"
+          class="px-2.5 py-1 border border-gray-200 hover:bg-gray-50 text-gray-600 text-xs font-medium rounded-lg transition-colors flex items-center gap-1 bg-white shadow-sm"
         >
-          <Keyboard class="w-4 h-4" />
-          <span>快捷键说明</span>
+          <Keyboard class="w-3.5 h-3.5" />
+          <span>快捷键</span>
         </button>
       </div>
     </div>
@@ -349,13 +349,13 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
       @close-success="successMessage = ''"
     />
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
       <!-- 左侧：输入框 + 签名校验 -->
-      <div class="lg:col-span-5 space-y-6">
+      <div class="lg:col-span-5 space-y-4">
         <!-- JWT 粘贴区 -->
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
-          <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-            <span class="text-sm font-semibold text-gray-700">粘贴 JWT Token</span>
+          <div class="px-3 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+            <span class="text-xs font-semibold text-gray-700">粘贴 JWT Token</span>
             <button
               v-if="jwtToken"
               @click="copyContent(jwtToken, 'token')"
@@ -371,19 +371,19 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
             v-model="jwtToken"
             @input="handleTokenInput"
             placeholder="在此粘贴您的 JWT Token (格式：Header.Payload.Signature)..."
-            class="w-full h-80 p-4 font-mono text-sm resize-none focus:outline-none leading-relaxed text-gray-800"
+            class="w-full h-[calc(100vh-360px)] min-h-[350px] p-3 font-mono text-sm resize-none focus:outline-none leading-relaxed text-gray-800"
             spellcheck="false"
           ></textarea>
         </div>
 
         <!-- 签名校验卡片 -->
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 space-y-4">
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-4 space-y-3">
           <div>
-            <h3 class="font-bold text-gray-900 text-sm flex items-center gap-2">
-              <Key class="w-4 h-4 text-indigo-600" />
+            <h3 class="font-bold text-gray-900 text-xs flex items-center gap-1.5">
+              <Key class="w-3.5 h-3.5 text-indigo-600" />
               HS256 签名校验 (本地计算)
             </h3>
-            <p class="text-xs text-gray-400 mt-1">
+            <p class="text-[10px] text-gray-400 mt-0.5">
               如果在下方输入 Secret 密钥，系统将在浏览器本地使用 HMAC-SHA256 重新计算签名以比对真伪。
             </p>
           </div>
@@ -393,7 +393,7 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
               v-model="signatureSecret"
               type="password"
               placeholder="输入 Signature 校验密钥 (Secret)..."
-              class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-mono"
+              class="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-mono"
             />
           </div>
 
@@ -401,14 +401,14 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
           <div v-if="signatureSecret && parsedJwt?.success" class="pt-1">
             <div
               v-if="signatureStatus === 'verified'"
-              class="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-green-50 border border-green-200 text-green-800 text-xs font-semibold"
+              class="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-50 border border-green-200 text-green-800 text-xs font-semibold"
             >
               <ShieldCheck class="w-4 h-4 text-green-600 shrink-0" />
               签名校验成功！数据安全且未被篡改。
             </div>
             <div
               v-else-if="signatureStatus === 'mismatched'"
-              class="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-red-50 border border-red-200 text-red-800 text-xs font-semibold"
+              class="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-red-800 text-xs font-semibold"
             >
               <ShieldAlert class="w-4 h-4 text-red-600 shrink-0" />
               签名校验失败！密钥错误或内容已被更改。
@@ -418,7 +418,7 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
       </div>
 
       <!-- 右侧：解析结果展示 -->
-      <div class="lg:col-span-7 space-y-6">
+      <div class="lg:col-span-7 space-y-4">
         <!-- 暂无数据提示 -->
         <div
           v-if="!parsedJwt || !parsedJwt.success"
@@ -429,15 +429,15 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
           <p class="text-xs text-gray-300 mt-1">您可以点击左上方“加载校验示例”直接预览解析样式</p>
         </div>
 
-        <div v-else class="space-y-6">
+        <div v-else class="space-y-4">
           <!-- 状态与关键声明面板 -->
-          <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- 基本信息 -->
-            <div class="space-y-2 text-xs">
-              <h4 class="font-bold text-gray-500 uppercase tracking-wider">Token 信息</h4>
+            <div class="space-y-1.5 text-xs">
+              <h4 class="font-bold text-gray-500 uppercase tracking-wider text-[10px]">Token 信息</h4>
               <div class="flex items-center gap-2">
                 <span class="text-gray-400">加密算法 (alg):</span>
-                <span class="font-mono bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-semibold">
+                <span class="font-mono bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded font-semibold">
                   {{ parsedJwt.header?.alg || '未知' }}
                 </span>
               </div>
@@ -450,20 +450,20 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
             </div>
 
             <!-- 过期状态 -->
-            <div v-if="expirationInfo" class="space-y-2 border-t md:border-t-0 md:border-l border-gray-100 pt-3 md:pt-0 md:pl-4 text-xs">
-              <h4 class="font-bold text-gray-500 uppercase tracking-wider">过期状态</h4>
+            <div v-if="expirationInfo" class="space-y-1.5 border-t md:border-t-0 md:border-l border-gray-100 pt-3 md:pt-0 md:pl-4 text-xs">
+              <h4 class="font-bold text-gray-500 uppercase tracking-wider text-[10px]">过期状态</h4>
               <div class="flex items-center gap-2">
                 <span class="text-gray-400">状态：</span>
                 <span
                   :class="[
-                    'font-bold px-2 py-0.5 rounded',
+                    'font-bold px-1.5 py-0.5 rounded',
                     expirationInfo.expired ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'
                   ]"
                 >
                   {{ expirationInfo.text }}
                 </span>
               </div>
-              <div class="text-gray-500 mt-1">
+              <div class="text-gray-500 text-[11px] mt-0.5">
                 {{ expirationInfo.detail }}
               </div>
             </div>
@@ -471,8 +471,8 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
 
           <!-- Header JSON -->
           <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
-            <div class="px-4 py-2.5 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-              <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Header (头部)</span>
+            <div class="px-3 py-1.5 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+              <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Header (头部)</span>
               <button
                 @click="copyContent(JSON.stringify(parsedJwt.header, null, 2), 'header')"
                 class="text-xs text-indigo-600 hover:text-indigo-700 font-semibold transition-colors flex items-center gap-1"
@@ -482,13 +482,13 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
                 复制 Header
               </button>
             </div>
-            <pre class="p-4 overflow-x-auto text-xs font-mono bg-gray-50/20"><code v-html="highlightedHeader" class="hljs json"></code></pre>
+            <pre class="p-3 overflow-x-auto text-xs font-mono bg-gray-50/20 max-h-[160px]"><code v-html="highlightedHeader" class="hljs json"></code></pre>
           </div>
 
           <!-- Payload JSON -->
           <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
-            <div class="px-4 py-2.5 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-              <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Payload (载荷)</span>
+            <div class="px-3 py-1.5 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+              <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Payload (载荷)</span>
               <button
                 @click="copyContent(JSON.stringify(parsedJwt.payload, null, 2), 'payload')"
                 class="text-xs text-indigo-600 hover:text-indigo-700 font-semibold transition-colors flex items-center gap-1"
@@ -498,15 +498,15 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
                 复制 Payload
               </button>
             </div>
-            <pre class="p-4 overflow-x-auto text-xs font-mono bg-gray-50/20"><code v-html="highlightedPayload" class="hljs json"></code></pre>
+            <pre class="p-3 overflow-x-auto text-xs font-mono bg-gray-50/20 max-h-[280px]"><code v-html="highlightedPayload" class="hljs json"></code></pre>
           </div>
 
           <!-- Signature -->
           <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col text-xs">
-            <div class="px-4 py-2.5 bg-gray-50 border-b border-gray-200">
-              <span class="font-bold text-gray-500 uppercase tracking-wider">Signature (签名密文)</span>
+            <div class="px-3 py-1.5 bg-gray-50 border-b border-gray-200">
+              <span class="font-bold text-gray-500 uppercase tracking-wider text-[10px]">Signature (签名密文)</span>
             </div>
-            <div class="p-4 font-mono break-all text-gray-500 leading-relaxed bg-gray-50/20">
+            <div class="p-3 font-mono break-all text-gray-500 leading-relaxed bg-gray-50/20">
               {{ parsedJwt.signature || '无签名' }}
             </div>
           </div>
@@ -515,23 +515,31 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
     </div>
 
     <!-- 💡 功能说明 -->
-    <div class="mt-8 bg-indigo-50 rounded-xl p-4 border border-indigo-100">
-      <h4 class="text-sm font-bold text-indigo-800 mb-2">💡 功能说明</h4>
-      <ul class="text-xs text-indigo-700 space-y-1.5 leading-relaxed">
-        <li>• <strong>Header 头部</strong>：定义了 Token 类型及签名算法名称。</li>
-        <li>• <strong>Payload 载荷</strong>：承载的核心数据声明（如用户 ID、权限以及重要的过期时间 `exp`）。</li>
-        <li>• <strong>过期校验</strong>：系统实时计算 `exp` 声明时间，帮您精准把握 Token 还有多久到期。</li>
-        <li>• <strong>签名比对</strong>：允许在浏览器本地输入密钥（Secret）进行 HS256 对称签名的动态校验，数据安全不外泄。</li>
-        <li>• <strong>代码高亮</strong>：借助 `highlight.js` 将 JSON 进行语义美化着色，提升可读性。</li>
-      </ul>
+    <div class="bg-indigo-50 rounded-xl p-3 border border-indigo-100">
+      <h4 class="text-xs font-bold text-indigo-800 mb-2">💡 功能说明</h4>
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-3 text-[11px] text-indigo-700 leading-relaxed">
+        <div>
+          <strong class="block mb-0.5">Header 头部</strong>
+          定义了 Token 类型及签名算法名称。
+        </div>
+        <div>
+          <strong class="block mb-0.5">Payload 载荷</strong>
+          承载的核心数据声明（如用户 ID、权限以及过期时间 exp）。
+        </div>
+        <div>
+          <strong class="block mb-0.5">过期校验</strong>
+          系统实时计算 exp 声明时间，帮您精准把握 Token 还有多久到期。
+        </div>
+        <div>
+          <strong class="block mb-0.5">签名比对</strong>
+          在浏览器本地输入密钥（Secret）进行 HS256 对称签名的动态校验，数据安全。
+        </div>
+        <div>
+          <strong class="block mb-0.5">代码高亮</strong>
+          借助 highlight.js 将 JSON 进行语义美化着色，提升可读性。
+        </div>
+      </div>
     </div>
-
-    <!-- 快捷键说明模态框 -->
-    <ToolShortcutHelp 
-      :show="showShortcutHelp" 
-      :shortcuts="shortcuts" 
-      @close="showShortcutHelp = false" 
-    />
   </div>
 </template>
 

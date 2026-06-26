@@ -378,7 +378,7 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
 </script>
 
 <template>
-  <div class="px-6 py-8 max-w-6xl mx-auto">
+  <div class="max-w-[98%] xl:max-w-[95%] mx-auto space-y-3 px-3 py-4">
     <ToolPageHeader
       title="Cron 表达式助手"
       description="可视化配置与解析 Cron 表达式，支持中英文语义转换、未来执行时间预测及反向解析，零服务器上传，纯浏览器端处理。"
@@ -387,26 +387,26 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
     <ToolFeedback :error-message="errorMessage" :success-message="successMessage" />
 
     <!-- 顶部快捷模板 -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
-      <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-        <div class="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-2 px-3">
+      <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+        <div class="flex items-center gap-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
           <Sparkles class="w-3.5 h-3.5 text-emerald-500" />
           快捷应用模板
         </div>
         <button 
           @click="showShortcutHelp = true"
-          class="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors border border-gray-200/50 shadow-sm"
+          class="flex items-center gap-1 px-2.5 py-1 text-xs text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors border border-gray-200/50 shadow-sm"
         >
           <Keyboard class="w-3.5 h-3.5" />
-          <span>快捷键说明</span>
+          <span>快捷键</span>
         </button>
       </div>
-      <div class="flex flex-wrap gap-2">
+      <div class="flex flex-wrap gap-1.5">
         <button
           v-for="tpl in templates"
           :key="tpl.name"
           @click="applyTemplate(tpl)"
-          class="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg border border-gray-200 hover:border-emerald-200 transition-all"
+          class="px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-50 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg border border-gray-200 hover:border-emerald-200 transition-all"
         >
           {{ tpl.name }}
         </button>
@@ -414,21 +414,21 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
     </div>
 
     <!-- 主布局网格 -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
       
       <!-- 左半部分：可视化配置区 -->
       <div class="lg:col-span-7 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-        <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-          <span class="text-sm font-medium text-gray-700 flex items-center gap-1.5">
+        <div class="px-3 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+          <span class="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
             可视化配置生成器
           </span>
           <!-- 是否包含秒开关 -->
-          <label class="flex items-center gap-2 cursor-pointer text-xs font-medium text-gray-600">
+          <label class="flex items-center gap-2 cursor-pointer text-[11px] font-medium text-gray-600">
             <input
               type="checkbox"
               v-model="secondsEnabled"
-              class="w-3.5 h-3.5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer"
+              class="w-3 h-3 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer"
             />
             秒级配置 (6位表达式)
           </label>
@@ -439,91 +439,91 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
           <button
             v-if="secondsEnabled"
             @click="activeTab = 'second'"
-            :class="['flex-1 px-4 py-3 text-xs font-medium border-b-2 text-center whitespace-nowrap transition-colors', activeTab === 'second' ? 'border-emerald-500 text-emerald-600 bg-emerald-50/10' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
+            :class="['flex-1 px-3 py-2 text-xs font-medium border-b-2 text-center whitespace-nowrap transition-colors', activeTab === 'second' ? 'border-emerald-500 text-emerald-600 bg-emerald-50/10' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
           >
             秒 (0-59)
           </button>
           <button
             @click="activeTab = 'minute'"
-            :class="['flex-1 px-4 py-3 text-xs font-medium border-b-2 text-center whitespace-nowrap transition-colors', activeTab === 'minute' ? 'border-emerald-500 text-emerald-600 bg-emerald-50/10' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
+            :class="['flex-1 px-3 py-2 text-xs font-medium border-b-2 text-center whitespace-nowrap transition-colors', activeTab === 'minute' ? 'border-emerald-500 text-emerald-600 bg-emerald-50/10' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
           >
             分 (0-59)
           </button>
           <button
             @click="activeTab = 'hour'"
-            :class="['flex-1 px-4 py-3 text-xs font-medium border-b-2 text-center whitespace-nowrap transition-colors', activeTab === 'hour' ? 'border-emerald-500 text-emerald-600 bg-emerald-50/10' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
+            :class="['flex-1 px-3 py-2 text-xs font-medium border-b-2 text-center whitespace-nowrap transition-colors', activeTab === 'hour' ? 'border-emerald-500 text-emerald-600 bg-emerald-50/10' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
           >
             时 (0-23)
           </button>
           <button
             @click="activeTab = 'day'"
-            :class="['flex-1 px-4 py-3 text-xs font-medium border-b-2 text-center whitespace-nowrap transition-colors', activeTab === 'day' ? 'border-emerald-500 text-emerald-600 bg-emerald-50/10' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
+            :class="['flex-1 px-3 py-2 text-xs font-medium border-b-2 text-center whitespace-nowrap transition-colors', activeTab === 'day' ? 'border-emerald-500 text-emerald-600 bg-emerald-50/10' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
           >
             日 (1-31)
           </button>
           <button
             @click="activeTab = 'month'"
-            :class="['flex-1 px-4 py-3 text-xs font-medium border-b-2 text-center whitespace-nowrap transition-colors', activeTab === 'month' ? 'border-emerald-500 text-emerald-600 bg-emerald-50/10' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
+            :class="['flex-1 px-3 py-2 text-xs font-medium border-b-2 text-center whitespace-nowrap transition-colors', activeTab === 'month' ? 'border-emerald-500 text-emerald-600 bg-emerald-50/10' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
           >
             月 (1-12)
           </button>
           <button
             @click="activeTab = 'week'"
-            :class="['flex-1 px-4 py-3 text-xs font-medium border-b-2 text-center whitespace-nowrap transition-colors', activeTab === 'week' ? 'border-emerald-500 text-emerald-600 bg-emerald-50/10' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
+            :class="['flex-1 px-3 py-2 text-xs font-medium border-b-2 text-center whitespace-nowrap transition-colors', activeTab === 'week' ? 'border-emerald-500 text-emerald-600 bg-emerald-50/10' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50']"
           >
             周 (1-7)
           </button>
         </div>
 
         <!-- 配置表单区 -->
-        <div class="p-6 flex-1 space-y-6">
+        <div class="p-4 flex-1 space-y-4">
           <div class="space-y-4">
             
             <!-- 1. 任意值 -->
-            <label class="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
+            <label class="flex items-center gap-3 cursor-pointer p-2.5 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
               <input
                 type="radio"
                 value="all"
                 v-model="currentTabConfig.state.type"
-                class="w-4 h-4 text-emerald-600 border-gray-300 focus:ring-emerald-500 cursor-pointer"
+                class="w-3.5 h-3.5 text-emerald-600 border-gray-300 focus:ring-emerald-500 cursor-pointer"
               />
               <div class="flex flex-col">
-                <span class="text-sm font-medium text-gray-700">任意值 (通配符)</span>
-                <span class="text-xs text-gray-400">允许执行在此 {{ currentTabConfig.label }} 的每一个时间点，即表示 <code class="bg-gray-100 px-1 py-0.5 rounded font-mono text-emerald-600 font-bold">*</code></span>
+                <span class="text-xs font-semibold text-gray-700">任意值 (通配符)</span>
+                <span class="text-[10px] text-gray-400">允许执行在此 {{ currentTabConfig.label }} 的每一个时间点，即表示 <code class="bg-gray-100 px-1 py-0.5 rounded font-mono text-emerald-600 font-bold">*</code></span>
               </div>
             </label>
 
             <!-- 2. 不指定 (仅对日和周有效) -->
             <label
               v-if="activeTab === 'day' || activeTab === 'week'"
-              class="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors"
+              class="flex items-center gap-3 cursor-pointer p-2.5 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors"
             >
               <input
                 type="radio"
                 value="no-specific"
                 v-model="currentTabConfig.state.type"
-                class="w-4 h-4 text-emerald-600 border-gray-300 focus:ring-emerald-500 cursor-pointer"
+                class="w-3.5 h-3.5 text-emerald-600 border-gray-300 focus:ring-emerald-500 cursor-pointer"
               />
               <div class="flex flex-col">
-                <span class="text-sm font-medium text-gray-700">不指定 (问号符)</span>
-                <span class="text-xs text-gray-400">在此 {{ currentTabConfig.label }} 不指定特定限制，用于日与周之间的防冲突，即表示 <code class="bg-gray-100 px-1 py-0.5 rounded font-mono text-emerald-600 font-bold">?</code></span>
+                <span class="text-xs font-semibold text-gray-700">不指定 (问号符)</span>
+                <span class="text-[10px] text-gray-400">在此 {{ currentTabConfig.label }} 不指定特定限制，用于日与周之间的防冲突，即表示 <code class="bg-gray-100 px-1 py-0.5 rounded font-mono text-emerald-600 font-bold">?</code></span>
               </div>
             </label>
 
             <!-- 3. 周期执行 -->
-            <div class="p-3 rounded-lg border border-gray-100 space-y-3">
+            <div class="p-2.5 rounded-lg border border-gray-100 space-y-2">
               <label class="flex items-center gap-3 cursor-pointer">
                 <input
                   type="radio"
                   value="cycle"
                   v-model="currentTabConfig.state.type"
-                  class="w-4 h-4 text-emerald-600 border-gray-300 focus:ring-emerald-500 cursor-pointer"
+                  class="w-3.5 h-3.5 text-emerald-600 border-gray-300 focus:ring-emerald-500 cursor-pointer"
                 />
-                <span class="text-sm font-medium text-gray-700">间隔/循环 (周期)</span>
+                <span class="text-xs font-semibold text-gray-700">间隔/循环 (周期)</span>
               </label>
               <div
                 v-if="currentTabConfig.state.type === 'cycle'"
-                class="flex items-center gap-2 text-sm text-gray-600 pl-7 flex-wrap"
+                class="flex items-center gap-2 text-xs text-gray-600 pl-7 flex-wrap"
               >
                 <span>从第</span>
                 <input
@@ -531,7 +531,7 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
                   v-model.number="currentTabConfig.state.cycleStart"
                   :min="currentTabConfig.min"
                   :max="currentTabConfig.max"
-                  class="w-16 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono text-center"
+                  class="w-14 px-1.5 py-0.5 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono text-center text-xs"
                 />
                 <span>{{ currentTabConfig.label }}开始，每隔</span>
                 <input
@@ -539,26 +539,26 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
                   v-model.number="currentTabConfig.state.cycleInterval"
                   min="1"
                   :max="currentTabConfig.max"
-                  class="w-16 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono text-center"
+                  class="w-14 px-1.5 py-0.5 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono text-center text-xs"
                 />
                 <span>{{ currentTabConfig.label }}执行一次</span>
               </div>
             </div>
 
             <!-- 4. 区间执行 -->
-            <div class="p-3 rounded-lg border border-gray-100 space-y-3">
+            <div class="p-2.5 rounded-lg border border-gray-100 space-y-2">
               <label class="flex items-center gap-3 cursor-pointer">
                 <input
                   type="radio"
                   value="range"
                   v-model="currentTabConfig.state.type"
-                  class="w-4 h-4 text-emerald-600 border-gray-300 focus:ring-emerald-500 cursor-pointer"
+                  class="w-3.5 h-3.5 text-emerald-600 border-gray-300 focus:ring-emerald-500 cursor-pointer"
                 />
-                <span class="text-sm font-medium text-gray-700">范围 (区间)</span>
+                <span class="text-xs font-semibold text-gray-700">范围 (区间)</span>
               </label>
               <div
                 v-if="currentTabConfig.state.type === 'range'"
-                class="flex items-center gap-2 text-sm text-gray-600 pl-7 flex-wrap"
+                class="flex items-center gap-2 text-xs text-gray-600 pl-7 flex-wrap"
               >
                 <span>从第</span>
                 <input
@@ -566,7 +566,7 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
                   v-model.number="currentTabConfig.state.rangeStart"
                   :min="currentTabConfig.min"
                   :max="currentTabConfig.max"
-                  class="w-16 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono text-center"
+                  class="w-14 px-1.5 py-0.5 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono text-center text-xs"
                 />
                 <span>{{ currentTabConfig.label }} 到第</span>
                 <input
@@ -574,35 +574,35 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
                   v-model.number="currentTabConfig.state.rangeEnd"
                   :min="currentTabConfig.min"
                   :max="currentTabConfig.max"
-                  class="w-16 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono text-center"
+                  class="w-14 px-1.5 py-0.5 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono text-center text-xs"
                 />
                 <span>{{ currentTabConfig.label }} 之间的每一个时间点执行</span>
               </div>
             </div>
 
             <!-- 5. 指定具体值 -->
-            <div class="p-3 rounded-lg border border-gray-100 space-y-3">
+            <div class="p-2.5 rounded-lg border border-gray-100 space-y-2">
               <div class="flex items-center justify-between">
                 <label class="flex items-center gap-3 cursor-pointer">
                   <input
                     type="radio"
                     value="specific"
                     v-model="currentTabConfig.state.type"
-                    class="w-4 h-4 text-emerald-600 border-gray-300 focus:ring-emerald-500 cursor-pointer"
+                    class="w-3.5 h-3.5 text-emerald-600 border-gray-300 focus:ring-emerald-500 cursor-pointer"
                   />
-                  <span class="text-sm font-medium text-gray-700">指定具体 {{ currentTabConfig.label }}</span>
+                  <span class="text-xs font-semibold text-gray-700">指定具体 {{ currentTabConfig.label }}</span>
                 </label>
-                <div v-if="currentTabConfig.state.type === 'specific'" class="flex items-center gap-3">
+                <div v-if="currentTabConfig.state.type === 'specific'" class="flex items-center gap-2">
                   <button
                     @click="toggleAllSpecific(true)"
-                    class="text-xs text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
+                    class="text-[10px] text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
                   >
                     全选
                   </button>
-                  <span class="text-gray-300 text-xs">|</span>
+                  <span class="text-gray-300 text-[10px]">|</span>
                   <button
                     @click="toggleAllSpecific(false)"
-                    class="text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors"
+                    class="text-[10px] text-gray-500 hover:text-gray-700 font-medium transition-colors"
                   >
                     全不选
                   </button>
@@ -612,17 +612,17 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
               <!-- 指定值网格视图 -->
               <div
                 v-if="currentTabConfig.state.type === 'specific'"
-                class="pl-7 pt-2"
+                class="pl-7 pt-1"
               >
                 <!-- 秒/分 60网格 -->
                 <div
                   v-if="activeTab === 'second' || activeTab === 'minute'"
-                  class="grid grid-cols-6 sm:grid-cols-10 gap-1.5"
+                  class="grid grid-cols-6 sm:grid-cols-10 gap-1"
                 >
                   <label
                     v-for="v in 60"
                     :key="v - 1"
-                    class="flex items-center justify-center p-1.5 border border-gray-100 rounded hover:bg-emerald-50 cursor-pointer text-xs font-mono transition-colors"
+                    class="flex items-center justify-center p-1 border border-gray-100 rounded hover:bg-emerald-50 cursor-pointer text-xs font-mono transition-colors"
                     :class="currentTabConfig.state.specific.includes(v - 1) ? 'bg-emerald-50 border-emerald-300 text-emerald-700 font-bold' : 'bg-gray-50/50 text-gray-600'"
                   >
                     <input
@@ -728,13 +728,13 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
       </div>
 
       <!-- 右半部分：表达式、语义翻译与未来执行时间 -->
-      <div class="lg:col-span-5 space-y-6">
-
+      <div class="lg:col-span-5 space-y-4">
+        
         <!-- 1. 表达式输入与一键复制 -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-4">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 space-y-3">
           <div class="flex items-center justify-between">
-            <span class="text-sm font-semibold text-gray-700">当前 Cron 表达式</span>
-            <span class="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
+            <span class="text-xs font-semibold text-gray-700">当前 Cron 表达式</span>
+            <span class="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
               {{ secondsEnabled ? '6 位表达式' : '5 位标准表达式' }}
             </span>
           </div>
@@ -744,15 +744,15 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
               type="text"
               v-model="cronExpression"
               placeholder="请输入或在这里修改 Cron 表达式..."
-              class="w-full px-4 py-3 font-mono text-base bg-gray-50 border border-gray-300 rounded-l-lg focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all"
+              class="w-full px-3 py-1.5 font-mono text-sm bg-gray-50 border border-gray-300 rounded-l-lg focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all"
               spellcheck="false"
             />
             <button
               @click="copyExpression"
-              class="px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-r-lg font-medium text-sm flex items-center gap-1.5 transition-colors whitespace-nowrap"
+              class="px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-r-lg font-medium text-xs flex items-center gap-1 transition-colors whitespace-nowrap"
             >
-              <Check v-if="copied" class="w-4 h-4" />
-              <Copy v-else class="w-4 h-4" />
+              <Check v-if="copied" class="w-3.5 h-3.5" />
+              <Copy v-else class="w-3.5 h-3.5" />
               <span>复制</span>
               <kbd class="hidden md:inline-flex items-center px-1 bg-white/20 text-white rounded text-[9px] font-mono leading-none select-none">
                 {{ isMac ? '⌘⇧C' : 'Ctrl+Shift+C' }}
@@ -763,13 +763,13 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
 
         <!-- 2. 中文语义翻译 -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-            <span class="text-sm font-medium text-gray-700 flex items-center gap-1.5">
-              <HelpCircle class="w-4 h-4 text-gray-400" />
+          <div class="px-3 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+            <span class="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+              <HelpCircle class="w-3.5 h-3.5 text-gray-400" />
               规则中文语义解析
             </span>
           </div>
-          <div class="p-6">
+          <div class="p-4">
             <div
               v-if="hasError"
               class="flex items-start gap-3 p-3 bg-rose-50 border border-rose-100 rounded-lg text-rose-800 text-xs"
@@ -797,18 +797,18 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
               未来 5 次运行时间预测
             </span>
           </div>
-          <div class="p-6">
-            <div v-if="hasError" class="text-sm text-gray-400 text-center py-4">
+          <div class="p-4">
+            <div v-if="hasError" class="text-xs text-gray-400 text-center py-3">
               暂无有效的未来执行序列预测
             </div>
-            <div v-else-if="futureExecutionTimes.length === 0" class="text-sm text-gray-400 text-center py-4">
+            <div v-else-if="futureExecutionTimes.length === 0" class="text-xs text-gray-400 text-center py-3">
               未检测到未来的执行序列
             </div>
             <ul v-else class="divide-y divide-gray-100">
               <li
                 v-for="(time, idx) in futureExecutionTimes"
                 :key="idx"
-                class="py-3 flex items-center justify-between text-sm"
+                class="py-2 flex items-center justify-between text-xs"
               >
                 <div class="flex items-center gap-2">
                   <span class="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold">
@@ -816,7 +816,7 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
                   </span>
                   <span class="font-mono text-gray-700 font-medium">{{ time }}</span>
                 </div>
-                <div class="flex items-center gap-1 text-xs text-gray-400">
+                <div class="flex items-center gap-1 text-[10px] text-gray-400">
                   <span>运行</span>
                   <ArrowRight class="w-3 h-3" />
                 </div>

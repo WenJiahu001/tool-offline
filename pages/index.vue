@@ -86,6 +86,27 @@ const moveFocus = (direction: 'up' | 'down' | 'left' | 'right') => {
     return
   }
 
+  // 左右方向键：线性导航（解决换行和边界逻辑）
+  if (direction === 'right') {
+    const nextIndex = activeIndex + 1
+    if (nextIndex < cards.length) {
+      cards[nextIndex].focus()
+    }
+    return
+  }
+
+  if (direction === 'left') {
+    const prevIndex = activeIndex - 1
+    if (prevIndex >= 0) {
+      cards[prevIndex].focus()
+    } else if (searchInput.value) {
+      // 边界情况：在第一个卡片按左，聚焦搜索框
+      searchInput.value.focus()
+    }
+    return
+  }
+
+  // 上下方向键：几何位置导航
   const activeRect = activeEl.getBoundingClientRect()
   let bestTarget: HTMLElement | null = null
   let minDistance = Infinity
@@ -106,13 +127,7 @@ const moveFocus = (direction: 'up' | 'down' | 'left' | 'right') => {
     const dy = cardCenterY - activeCenterY
 
     // 几何距离计算：按移动方向偏重对应轴的距离，并对另一轴做偏移惩罚
-    if (direction === 'right' && dx > 5) {
-      isCorrectDirection = true
-      distance = dx + Math.abs(dy) * 2
-    } else if (direction === 'left' && dx < -5) {
-      isCorrectDirection = true
-      distance = -dx + Math.abs(dy) * 2
-    } else if (direction === 'down' && dy > 5) {
+    if (direction === 'down' && dy > 5) {
       isCorrectDirection = true
       distance = dy + Math.abs(dx) * 2
     } else if (direction === 'up' && dy < -5) {
@@ -136,6 +151,11 @@ const moveFocus = (direction: 'up' | 'down' | 'left' | 'right') => {
 
 // 处理首页网格键盘事件
 const handleGridKeyDown = (e: KeyboardEvent) => {
+  // 如果事件起源于搜索框（e.target），全局处理器直接忽略
+  if (e.target === searchInput.value) {
+    return
+  }
+
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
     e.preventDefault()
     if (e.key === 'ArrowUp') moveFocus('up')
@@ -171,33 +191,33 @@ const toolIcons = {
 </script>
 
 <template>
-  <div class="p-4 sm:p-6 md:p-8" @keydown="handleGridKeyDown">
+  <div class="p-3 sm:p-5 md:p-6" @keydown="handleGridKeyDown">
     <div class="max-w-[90rem] mx-auto">
       <!-- 搜索和快捷键指引栏 -->
-      <div class="mb-10 max-w-2xl mx-auto text-center space-y-4">
-        <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
+      <div class="mb-6 max-w-xl mx-auto text-center space-y-2.5">
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
           极速、安全、纯本地的处理工具箱
         </h1>
-        <p class="text-gray-500 text-sm sm:text-base">
+        <p class="text-gray-400 text-xs sm:text-sm">
           所有操作均在浏览器内本地执行，数据完全不上传服务器，保护您的隐私安全。
         </p>
 
         <!-- 极简流光搜索框 -->
-        <div class="relative group mt-6">
-          <div class="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl blur opacity-20 group-focus-within:opacity-40 transition duration-300"></div>
-          <div class="relative bg-white rounded-xl border border-gray-200/80 shadow-sm flex items-center px-4 py-3.5 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
-            <Search class="w-5 h-5 text-gray-400 mr-3" />
+        <div class="relative group mt-4">
+          <div class="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl blur opacity-20 group-focus-within:opacity-40 transition duration-300"></div>
+          <div class="relative bg-white rounded-lg border border-gray-200/80 shadow-sm flex items-center px-3.5 py-2.5 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
+            <Search class="w-4 h-4 text-gray-400 mr-2.5" />
             <input
               ref="searchInput"
               v-model="searchQuery"
               type="text"
               placeholder="搜索本地工具... (按 Enter 直接进入首个结果)"
-              class="w-full text-gray-700 placeholder-gray-400 bg-transparent outline-none text-sm sm:text-base"
+              class="w-full text-gray-700 placeholder-gray-400 bg-transparent outline-none text-xs sm:text-sm"
               @keydown.enter="handleSearchEnter"
-              @keydown.down.prevent="moveFocus('down')"
+              @keydown.down.stop.prevent="moveFocus('down')"
             />
-            <div class="flex items-center gap-1.5 ml-2">
-              <kbd class="hidden sm:inline-flex items-center px-2 py-0.5 text-[11px] font-semibold text-gray-400 bg-gray-50 border border-gray-200 rounded-md font-mono shadow-sm">
+            <div class="flex items-center gap-1.5 ml-2 shrink-0">
+              <kbd class="hidden sm:inline-flex items-center whitespace-nowrap px-1.5 py-0.5 text-[10px] font-semibold text-gray-400 bg-gray-50 border border-gray-200 rounded font-mono shadow-sm">
                 {{ isMac ? '⌘' : 'Ctrl' }} + K
               </kbd>
             </div>
@@ -205,13 +225,13 @@ const toolIcons = {
         </div>
 
         <!-- 快捷操作小提示 -->
-        <div class="flex items-center justify-center gap-4 text-xs text-gray-400 mt-2 font-medium">
+        <div class="flex items-center justify-center gap-3 text-[10px] text-gray-400 mt-1.5 font-medium">
           <span class="flex items-center gap-1">
-            <Keyboard class="w-3.5 h-3.5" />
+            <Keyboard class="w-3 h-3" />
             方向键 & Tab 导航卡片
           </span>
           <span class="flex items-center gap-1">
-            <kbd class="px-1.5 py-0.5 bg-gray-100 border border-gray-200 rounded text-[10px] font-mono">Enter</kbd>
+            <kbd class="px-1 py-0.5 bg-gray-100 border border-gray-200 rounded text-[9px] font-mono">Enter</kbd>
             进入工具
           </span>
         </div>

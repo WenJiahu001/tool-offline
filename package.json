@@ -21,6 +21,7 @@
     "diff": "^9.0.0",
     "exifr": "^7.1.3",
     "highlight.js": "^11.11.1",
+    "jsonrepair": "^3.14.1",
     "lucide-vue-next": "^0.562.0",
     "marked": "^18.0.2",
     "nuxt": "^3.11.0",

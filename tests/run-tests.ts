@@ -22,6 +22,23 @@ const run = () => {
   }
   assert.match(smartFix(source), /"foo": "bar"/)
 
+  // 进阶修复测试 (jsonrepair 独有能力)
+  // 1. 缺失属性间的逗号
+  const missingComma = '{"a": 1 "b": 2}'
+  const parsedMC = tryParseJson(missingComma, true)
+  assert.equal(parsedMC.success, true)
+  if (parsedMC.success) {
+    assert.deepEqual(parsedMC.data, { a: 1, b: 2 })
+  }
+
+  // 2. 未转义字符修复
+  const unescapedNewlines = '{\n  "text": "hello\\nworld"\n}'
+  const parsedUN = tryParseJson(unescapedNewlines, true)
+  assert.equal(parsedUN.success, true)
+  if (parsedUN.success) {
+    assert.deepEqual(parsedUN.data, { text: "hello\nworld" })
+  }
+
   const diff = compareJsonObjects(
     { a: 1, nested: { ok: true }, list: [1, 2] },
     { a: 2, nested: { ok: false }, list: [1, 3], extra: true },

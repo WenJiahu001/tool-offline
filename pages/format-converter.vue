@@ -133,7 +133,7 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
 </script>
 
 <template>
-  <div class="max-w-6xl mx-auto space-y-6">
+  <div class="max-w-[98%] xl:max-w-[95%] mx-auto space-y-3">
     <ToolPageHeader
       title="数据格式转换"
       description="JSON、YAML、Properties 格式互转，支持嵌套打平与结构还原。"
@@ -143,18 +143,18 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
     />
 
     <!-- 工具栏 -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-wrap items-center justify-between gap-4">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-2 px-3 flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-2 text-xs text-gray-500 font-medium">
         <Keyboard class="w-3.5 h-3.5 text-gray-400" />
         <span>支持双向实时转换。复制输出：<kbd class="font-mono bg-gray-100 border px-1 rounded text-[10px]">Ctrl+Shift+C</kbd></span>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1.5">
         <button
           v-if="leftText || rightText"
           @click="copyOutput"
-          class="px-3 py-1.5 text-fuchsia-600 hover:bg-fuchsia-50 text-sm font-medium rounded-lg transition-colors flex items-center gap-1 border border-fuchsia-100"
+          class="px-2.5 py-1 text-fuchsia-600 hover:bg-fuchsia-50 text-xs font-medium rounded-lg transition-colors flex items-center gap-1 border border-fuchsia-100"
         >
-          <component :is="copied ? Check : Copy" class="w-4 h-4" />
+          <component :is="copied ? Check : Copy" class="w-3.5 h-3.5" />
           <span>{{ copied ? '已复制' : '复制输出' }}</span>
           <kbd class="hidden md:inline-flex items-center px-1 bg-fuchsia-50 text-fuchsia-500 border border-fuchsia-100 rounded text-[9px] font-mono leading-none select-none">
             {{ isMac ? '⌘⇧C' : 'Ctrl+Shift+C' }}
@@ -162,9 +162,9 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
         </button>
         <button
           @click="clearAll"
-          class="px-3 py-1.5 text-gray-500 hover:bg-gray-50 text-sm font-medium rounded-lg transition-colors flex items-center gap-1 border border-gray-100"
+          class="px-2.5 py-1 text-gray-500 hover:bg-gray-50 text-xs font-medium rounded-lg transition-colors flex items-center gap-1 border border-gray-100"
         >
-          <RotateCcw class="w-4 h-4" />
+          <RotateCcw class="w-3.5 h-3.5" />
           <span>重置</span>
           <kbd class="hidden md:inline-flex items-center px-1 bg-gray-100 text-gray-400 border border-gray-200 rounded text-[9px] font-mono leading-none select-none">
             {{ isMac ? '⌘D' : 'Ctrl+D' }}
@@ -172,26 +172,26 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
         </button>
         <button
           @click="showShortcutHelp = true"
-          class="px-3 py-1.5 text-gray-500 hover:bg-gray-50 border border-gray-200 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+          class="px-2.5 py-1 text-gray-500 hover:bg-gray-50 border border-gray-200 text-xs font-medium rounded-lg transition-colors flex items-center gap-1 shadow-sm"
         >
-          <Keyboard class="w-4 h-4" />
-          <span>快捷键说明</span>
+          <Keyboard class="w-3.5 h-3.5" />
+          <span>快捷键</span>
         </button>
       </div>
     </div>
 
-    <div v-if="errorMessage" class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-center gap-2">
+    <div v-if="errorMessage" class="bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-lg flex items-center gap-2 text-xs">
       <span class="font-medium">错误：</span>
-      <span class="text-sm">{{ errorMessage }}</span>
+      <span class="text-xs">{{ errorMessage }}</span>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="space-y-3 flex flex-col h-[600px]">
+      <div class="space-y-2 flex flex-col h-[calc(100vh-220px)] min-h-[550px]">
         <div class="flex items-center justify-between">
-          <label class="block text-sm font-medium text-gray-700">源格式/输入</label>
+          <label class="block text-xs font-medium text-gray-700">源格式/输入</label>
           <select 
             v-model="leftFormat" 
-            class="text-sm border-gray-300 rounded-md shadow-sm focus:border-fuchsia-500 focus:ring-fuchsia-500"
+            class="text-xs border-gray-300 rounded-md shadow-sm focus:border-fuchsia-500 focus:ring-fuchsia-500 py-1"
           >
             <option v-for="fmt in formats" :key="'l'+fmt.value" :value="fmt.value">{{ fmt.label }}</option>
           </select>
@@ -200,17 +200,17 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
           ref="mainInput"
           v-model="leftText"
           @input="handleLeftInput"
-          class="flex-1 w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fuchsia-500 focus:border-fuchsia-500 font-mono text-sm resize-none"
+          class="flex-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fuchsia-500 focus:border-fuchsia-500 font-mono text-sm resize-none"
           placeholder="在此输入内容..."
         ></textarea>
       </div>
 
-      <div class="space-y-3 flex flex-col h-[600px]">
+      <div class="space-y-2 flex flex-col h-[calc(100vh-220px)] min-h-[550px]">
         <div class="flex items-center justify-between">
-          <label class="block text-sm font-medium text-gray-700">目标格式/输出</label>
+          <label class="block text-xs font-medium text-gray-700">目标格式/输出</label>
           <select 
             v-model="rightFormat" 
-            class="text-sm border-gray-300 rounded-md shadow-sm focus:border-fuchsia-500 focus:ring-fuchsia-500"
+            class="text-xs border-gray-300 rounded-md shadow-sm focus:border-fuchsia-500 focus:ring-fuchsia-500 py-1"
           >
             <option v-for="fmt in formats" :key="'r'+fmt.value" :value="fmt.value">{{ fmt.label }}</option>
           </select>
@@ -218,7 +218,7 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
         <textarea
           v-model="rightText"
           @input="handleRightInput"
-          class="flex-1 w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fuchsia-500 focus:border-fuchsia-500 font-mono text-sm resize-none"
+          class="flex-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fuchsia-500 focus:border-fuchsia-500 font-mono text-sm resize-none"
           placeholder="转换结果将在此显示..."
         ></textarea>
       </div>

@@ -121,34 +121,36 @@ useSeoMeta({
   description: '在线二维码生成器，输入文字或链接即可生成二维码图片。支持自定义尺寸、颜色、容错级别，可下载 PNG 格式。',
   keywords: '二维码生成器, QR Code, 在线工具, 免费二维码, 二维码制作'
 })
+
+useShortcuts([])
 </script>
 
 <template>
-  <div class="px-6 py-8 max-w-4xl mx-auto">
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">二维码生成器</h1>
-      <p class="text-gray-500">输入文字或链接，即可生成二维码并下载。</p>
-    </div>
+  <div class="max-w-[98%] xl:max-w-[95%] mx-auto space-y-3 px-3 py-4">
+    <ToolPageHeader
+      title="二维码生成器"
+      description="输入文字或链接，即可生成二维码并下载。"
+    />
     
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <!-- 左侧：输入区域 -->
-      <div class="space-y-6">
+      <div class="space-y-4">
         <!-- 文本输入 -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <label class="block text-sm font-semibold text-gray-700 mb-3">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <label class="block text-xs font-semibold text-gray-700 mb-2">
             输入内容
           </label>
           <textarea
             v-model="inputText"
             placeholder="输入文字、网址、电话号码等..."
-            class="w-full h-32 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all text-sm resize-none"
+            class="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all text-xs resize-none"
           ></textarea>
-          <p class="mt-2 text-xs text-gray-400">已输入 {{ inputText.length }} 个字符</p>
+          <p class="mt-1 text-[10px] text-gray-400">已输入 {{ inputText.length }} 个字符</p>
         </div>
         
         <!-- 配置选项 -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 class="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <h3 class="text-xs font-semibold text-gray-700 mb-3 flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -159,14 +161,14 @@ useSeoMeta({
           <div class="space-y-4">
             <!-- 尺寸选择 -->
             <div>
-              <label class="block text-sm text-gray-600 mb-2">尺寸</label>
+              <label class="block text-xs text-gray-600 mb-2">尺寸</label>
               <div class="flex flex-wrap gap-2">
                 <button
                   v-for="preset in sizePresets"
                   :key="preset.value"
                   @click="qrOptions.width = preset.value"
                   :class="[
-                    'px-3 py-1.5 text-sm rounded-lg border transition-all',
+                    'px-3 py-1.5 text-xs rounded-lg border transition-all',
                     qrOptions.width === preset.value
                       ? 'bg-gray-900 text-white border-gray-900'
                       : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
@@ -179,14 +181,14 @@ useSeoMeta({
             
             <!-- 容错级别 -->
             <div>
-              <label class="block text-sm text-gray-600 mb-2">容错级别</label>
+              <label class="block text-xs text-gray-600 mb-2">容错级别</label>
               <div class="flex flex-wrap gap-2">
                 <button
                   v-for="level in errorLevels"
                   :key="level.value"
                   @click="qrOptions.errorCorrectionLevel = level.value"
                   :class="[
-                    'px-3 py-1.5 text-sm rounded-lg border transition-all',
+                    'px-3 py-1.5 text-xs rounded-lg border transition-all',
                     qrOptions.errorCorrectionLevel === level.value
                       ? 'bg-gray-900 text-white border-gray-900'
                       : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
@@ -200,7 +202,7 @@ useSeoMeta({
             <!-- 颜色选择 -->
             <div class="space-y-3">
               <div class="flex items-center justify-between">
-                <label class="block text-sm text-gray-600">颜色方案</label>
+                <label class="block text-xs text-gray-600">颜色方案</label>
                 <button
                   @click="() => { const temp = qrOptions.color.dark; qrOptions.color.dark = qrOptions.color.light; qrOptions.color.light = temp }"
                   class="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1 transition-colors"
@@ -244,7 +246,7 @@ useSeoMeta({
                 <div>
                   <label class="block text-xs text-gray-500 mb-1.5">前景色</label>
                   <div class="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
-                    <label class="relative cursor-pointer">
+                    <label class="relative cursor-pointer shrink-0">
                       <input
                         type="color"
                         v-model="qrOptions.color.dark"
@@ -266,7 +268,7 @@ useSeoMeta({
                 <div>
                   <label class="block text-xs text-gray-500 mb-1.5">背景色</label>
                   <div class="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
-                    <label class="relative cursor-pointer">
+                    <label class="relative cursor-pointer shrink-0">
                       <input
                         type="color"
                         v-model="qrOptions.color.light"
@@ -292,16 +294,16 @@ useSeoMeta({
       </div>
       
       <!-- 右侧：预览和下载 -->
-      <div class="space-y-6">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 class="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+      <div class="space-y-4">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <h3 class="text-xs font-semibold text-gray-700 mb-3 flex items-center gap-2">
             <QrCode class="w-4 h-4 text-gray-500" />
             预览
           </h3>
           
           <!-- 二维码预览 -->
           <div 
-            class="flex items-center justify-center p-8 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50/50 min-h-[320px]"
+            class="flex items-center justify-center p-6 rounded-lg border border-dashed border-gray-200 bg-gray-50/50 min-h-[300px]"
             :style="{ backgroundColor: qrOptions.color.light }"
           >
             <canvas 
@@ -311,22 +313,22 @@ useSeoMeta({
           </div>
           
           <!-- 提示文字 -->
-          <p v-if="!inputText.trim()" class="mt-4 text-center text-sm text-gray-400">
+          <p v-if="!inputText.trim()" class="mt-3 text-center text-xs text-gray-400">
             请在左侧输入内容以生成二维码
           </p>
           
           <!-- 操作按钮 -->
-          <div v-if="hasQRCode" class="mt-6 flex flex-wrap gap-3">
+          <div v-if="hasQRCode" class="mt-4 flex flex-wrap gap-2">
             <button
               @click="downloadQRCode"
-              class="flex-1 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+              class="flex-1 px-3 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-1.5"
             >
               <Download class="w-4 h-4" />
               下载 PNG
             </button>
             <button
               @click="copyToClipboard"
-              class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+              class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-1.5"
             >
               <Check v-if="copied" class="w-4 h-4 text-green-600" />
               <Copy v-else class="w-4 h-4" />
@@ -334,7 +336,7 @@ useSeoMeta({
             </button>
             <button
               @click="clearAll"
-              class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+              class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-1.5"
             >
               <RefreshCw class="w-4 h-4" />
               清空
@@ -343,13 +345,15 @@ useSeoMeta({
         </div>
         
         <!-- 使用提示 -->
-        <div class="bg-cyan-50 rounded-xl p-4 border border-cyan-100">
-          <h4 class="text-sm font-semibold text-cyan-800 mb-2">💡 使用提示</h4>
-          <ul class="text-xs text-cyan-700 space-y-1">
-            <li>• 支持输入网址、文字、电话号码等内容</li>
-            <li>• 容错级别越高，二维码越复杂但越不易损坏</li>
-            <li>• 建议前景色和背景色保持足够对比度</li>
-          </ul>
+        <div class="bg-cyan-50 rounded-xl p-3 border border-cyan-100">
+          <h4 class="text-xs font-semibold text-cyan-800 mb-2 flex items-center gap-1">
+            <span>💡</span> 使用提示
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[10px] text-cyan-700">
+            <div class="bg-white/50 p-2 rounded border border-cyan-100/50">支持输入网址、文字、电话号码等所有文本内容</div>
+            <div class="bg-white/50 p-2 rounded border border-cyan-100/50">容错级别越高，二维码越复杂但越不易损坏</div>
+            <div class="bg-white/50 p-2 rounded border border-cyan-100/50">建议前景色和背景色保持足够的色彩对比度</div>
+          </div>
         </div>
       </div>
     </div>

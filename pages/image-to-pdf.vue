@@ -103,127 +103,129 @@ useSeoMeta({
   description: '将 JPG、PNG 等多种格式图片批量转换为 PDF 文档。支持自定义排序，保留高清画质，完全本地运行，保护隐私。',
   keywords: '图片转PDF, JPG转PDF, PNG转PDF, 图片合并PDF, 本地工具, 免费转换'
 })
+
+useShortcuts([])
 </script>
 
 <template>
-  <div class="p-6">
-  <div class="px-6 py-8 max-w-4xl mx-auto">
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">图片合并为 PDF</h1>
-      <p class="text-gray-500">将多张图片按顺序合并为一个 PDF 文档。</p>
-    </div>
-      <ToolFeedback
-        :error="errorMessage"
-        :success="successMessage"
-        @close-error="errorMessage = ''"
-        @close-success="successMessage = ''"
-      />
+  <div class="max-w-[98%] xl:max-w-[95%] mx-auto space-y-3 px-3 py-4">
+    <ToolPageHeader
+      title="图片合并为 PDF"
+      description="将多张图片按顺序合并为一个 PDF 文档。"
+      icon="file-up"
+      icon-bg="bg-indigo-50"
+      icon-color="text-indigo-600"
+    />
+    <ToolFeedback
+      :error="errorMessage"
+      :success="successMessage"
+      @close-error="errorMessage = ''"
+      @close-success="successMessage = ''"
+    />
       
-      <!-- 文件输入框 -->
-      <input 
-        type="file" 
-        id="imageFileInput" 
-        ref="fileInput"
-        class="hidden" 
-        accept="image/*"
-        multiple
-        @change="(e) => handleInputChange(e, handleImageFileSelect)"
-      />
-      
-      <!-- 拖拽上传区域 -->
-      <div 
-        class="border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all duration-300 group" 
-        :class="{
-          'border-blue-500 bg-blue-50/50': isDragging,
-          'border-gray-300 hover:border-blue-400 hover:bg-gray-50': !isDragging && !isProcessing,
-          'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60': isProcessing
-        }"
-        @dragover="handleDragOver"
-        @dragleave="handleDragLeave"
-        @drop="(e) => handleDrop(e, handleImageFileSelect)"
-        @click="triggerUpload"
-      >
-        <div v-if="isProcessing" class="flex flex-col items-center justify-center py-4">
-          <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600 mb-4"></div>
-          <p class="text-gray-900 font-medium">正在处理...</p>
+    <!-- 文件输入框 -->
+    <input 
+      type="file" 
+      id="imageFileInput" 
+      ref="fileInput"
+      class="hidden" 
+      accept="image/*"
+      multiple
+      @change="(e) => handleInputChange(e, handleImageFileSelect)"
+    />
+    
+    <!-- 拖拽上传区域 -->
+    <div 
+      class="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-300 group" 
+      :class="{
+        'border-blue-500 bg-blue-50/50': isDragging,
+        'border-gray-300 hover:border-blue-400 hover:bg-gray-50': !isDragging && !isProcessing,
+        'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60': isProcessing
+      }"
+      @dragover="handleDragOver"
+      @dragleave="handleDragLeave"
+      @drop="(e) => handleDrop(e, handleImageFileSelect)"
+      @click="triggerUpload"
+    >
+      <div v-if="isProcessing" class="flex flex-col items-center justify-center py-2">
+        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600 mb-2"></div>
+        <p class="text-gray-900 font-medium text-sm">正在处理...</p>
+      </div>
+      <div v-else class="flex flex-col items-center justify-center h-full w-full py-1">
+        <div class="bg-white p-3 rounded-full mb-3 shadow-sm border border-gray-100 group-hover:scale-110 transition-transform duration-300">
+          <Upload class="h-6 w-6 text-blue-600" />
         </div>
-        <div v-else class="flex flex-col items-center justify-center h-full w-full py-2">
-          <div class="bg-white p-4 rounded-full mb-4 shadow-sm border border-gray-100 group-hover:scale-110 transition-transform duration-300">
-            <Upload class="h-8 w-8 text-blue-600" />
+        <p class="text-gray-900 text-base font-semibold mb-1">点击或拖拽上传图片</p>
+        <p class="text-gray-500 text-xs">支持批量上传</p>
+      </div>
+    </div>
+    
+    <!-- 图片文件列表 -->
+    <div v-if="imageToPdfState.files.length > 0" class="mt-4">
+      <h3 class="text-xs font-semibold mb-1.5 text-gray-500">图片文件列表</h3>
+      <div class="flex flex-col gap-1.5">
+        <div v-for="(file, index) in imageToPdfState.files" :key="index" class="bg-white rounded p-1.5 shadow-sm border border-gray-100 flex items-center gap-3 hover:shadow-md transition-all group">
+          <!-- 序号 -->
+          <div class="w-5 h-5 flex items-center justify-center bg-gray-800 rounded-md text-[10px] font-bold text-white shrink-0 shadow-sm">
+            {{ index + 1 }}
           </div>
-          <p class="text-gray-900 text-lg font-semibold mb-1">点击或拖拽上传图片</p>
-          <p class="text-gray-500 text-sm">支持批量上传</p>
+
+          <!-- 图片预览 -->
+          <div class="relative shrink-0">
+            <img 
+              :src="previewUrls.get(getPreviewKey(index))" 
+              alt="预览" 
+              class="w-7 h-7 object-cover rounded shadow-sm border border-gray-100"
+            />
+          </div>
+          
+          <!-- 文件信息 -->
+          <div class="flex-1 min-w-0 flex items-baseline gap-2">
+            <p class="text-xs text-gray-700 truncate" :title="file.name">{{ file.name }}</p>
+            <p class="text-[10px] text-gray-400 shrink-0 font-mono">{{ formatFileSize(file.size) }}</p>
+          </div>
+
+          <!-- 操作按钮 -->
+          <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button 
+              class="p-0.5 rounded bg-gray-50 hover:bg-gray-100 text-gray-500 transition-colors"
+              @click="moveImageUp(index)"
+              :disabled="index === 0"
+              :class="{ 'invisible': index === 0 }"
+              title="前移"
+            >
+              <MoveUp class="h-3 w-3" />
+            </button>
+            <button 
+              class="p-0.5 rounded bg-gray-50 hover:bg-gray-100 text-gray-500 transition-colors"
+              @click="moveImageDown(index)"
+              :disabled="index === imageToPdfState.files.length - 1"
+              :class="{ 'invisible': index === imageToPdfState.files.length - 1 }"
+              title="后移"
+            >
+              <MoveDown class="h-3 w-3" />
+            </button>
+            <button 
+              class="p-0.5 rounded bg-red-50 hover:bg-red-100 text-red-500 transition-colors ml-1"
+              @click="removeImageFile(index)"
+              title="删除"
+            >
+              <Trash2 class="h-3 w-3" />
+            </button>
+          </div>
         </div>
       </div>
       
-      <!-- 图片文件列表 -->
-      <div v-if="imageToPdfState.files.length > 0" class="mt-6">
-        <h3 class="text-lg font-bold mb-2 text-gray-800">图片文件列表</h3>
-        <div class="flex flex-col gap-2">
-          <div v-for="(file, index) in imageToPdfState.files" :key="index" class="bg-white rounded p-1.5 shadow-sm border border-gray-100 flex items-center gap-3 hover:shadow-md transition-all group">
-            <!-- 序号 -->
-            <div class="w-6 h-6 flex items-center justify-center bg-gray-800 rounded-md text-xs font-bold text-white shrink-0 shadow-sm">
-              {{ index + 1 }}
-            </div>
-
-            <!-- 图片预览 -->
-            <div class="relative shrink-0">
-              <img 
-                :src="previewUrls.get(getPreviewKey(index))" 
-                alt="预览" 
-                class="w-8 h-8 object-cover rounded shadow-sm border border-gray-100"
-              />
-            </div>
-            
-            <!-- 文件信息 (单行显示) -->
-            <div class="flex-1 min-w-0 flex items-baseline gap-2">
-              <p class="text-xs text-gray-700 truncate" :title="file.name">{{ file.name }}</p>
-              <p class="text-[10px] text-gray-400 shrink-0">{{ formatFileSize(file.size) }}</p>
-            </div>
-
-            <!-- 操作按钮 -->
-            <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button 
-                class="p-0.5 rounded bg-gray-50 hover:bg-gray-100 text-gray-500 transition-colors"
-                @click="moveImageUp(index)"
-                :disabled="index === 0"
-                :class="{ 'invisible': index === 0 }"
-                title="前移"
-              >
-                <MoveUp class="h-3 w-3" />
-              </button>
-              <button 
-                class="p-0.5 rounded bg-gray-50 hover:bg-gray-100 text-gray-500 transition-colors"
-                @click="moveImageDown(index)"
-                :disabled="index === imageToPdfState.files.length - 1"
-                :class="{ 'invisible': index === imageToPdfState.files.length - 1 }"
-                title="后移"
-              >
-                <MoveDown class="h-3 w-3" />
-              </button>
-              <button 
-                class="p-0.5 rounded bg-red-50 hover:bg-red-100 text-red-500 transition-colors ml-1"
-                @click="removeImageFile(index)"
-                title="删除"
-              >
-                <Trash2 class="h-3 w-3" />
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        <div class="flex justify-end mt-8">
-          <button 
-            class="bg-gray-900 hover:bg-black text-white px-8 py-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-            @click="imagesToPdf"
-            :disabled="isProcessing || imageToPdfState.files.length === 0"
-          >
-            <Download class="h-5 w-5" />
-            转换为 PDF 并下载
-          </button>
-        </div>
+      <div class="flex justify-end mt-4">
+        <button 
+          class="bg-gray-900 hover:bg-black text-white px-4 py-2 rounded-lg transition-all duration-300 flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-xs font-semibold"
+          @click="imagesToPdf"
+          :disabled="isProcessing || imageToPdfState.files.length === 0"
+        >
+          <Download class="h-3.5 w-3.5" />
+          转换为 PDF 并下载
+        </button>
       </div>
     </div>
   </div>
 </template>
-

@@ -245,14 +245,19 @@ useSeoMeta({
   description: '在线查看图片隐私信息（GPS位置、拍摄设备、时间等），一键清除 EXIF 元数据保护隐私。纯本地处理，数据安全。',
   keywords: '图片隐私, EXIF清除, GPS位置, 隐私保护, 元数据清除, 本地工具'
 })
+
+useShortcuts([])
 </script>
 
 <template>
-  <div class="px-6 py-8 max-w-6xl mx-auto">
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">图片隐私信息清除</h1>
-      <p class="text-gray-500">上传图片查看隐私信息，一键清除后安全下载。</p>
-    </div>
+  <div class="max-w-[98%] xl:max-w-[95%] mx-auto space-y-3 px-3 py-4">
+    <ToolPageHeader
+      title="图片隐私信息清除"
+      description="上传图片查看隐私信息，一键清除后安全下载。"
+      icon="shield"
+      icon-bg="bg-rose-50"
+      icon-color="text-rose-600"
+    />
     <ToolFeedback
       :error="errorMessage"
       :success="successMessage"
@@ -273,7 +278,7 @@ useSeoMeta({
     
     <!-- 拖拽上传区域 -->
     <div 
-      class="border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all duration-300 group" 
+      class="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-300 group" 
       :class="{
         'border-rose-500 bg-rose-50/50': isDragging,
         'border-gray-300 hover:border-rose-400 hover:bg-gray-50': !isDragging && !isProcessing,
@@ -287,153 +292,153 @@ useSeoMeta({
     >
       
       <!-- 加载状态 -->
-      <div v-if="isProcessing" class="flex flex-col items-center justify-center py-4">
-        <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-rose-600 mb-4"></div>
-        <p class="text-gray-900 font-medium">正在分析图片...</p>
-        <p class="text-gray-500 text-sm mt-1">正在读取 EXIF 元数据</p>
+      <div v-if="isProcessing" class="flex flex-col items-center justify-center py-2">
+        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-rose-600 mb-2"></div>
+        <p class="text-gray-900 font-medium text-sm">正在分析图片...</p>
+        <p class="text-gray-500 text-xs mt-1">正在读取 EXIF 元数据</p>
       </div>
       
       <!-- 正常状态 -->
-      <div v-else class="flex flex-col items-center justify-center h-full w-full py-2">
-        <div class="bg-white p-4 rounded-full mb-4 shadow-sm border border-gray-100 group-hover:scale-110 transition-transform duration-300">
-          <Shield class="h-8 w-8 text-rose-600" />
+      <div v-else class="flex flex-col items-center justify-center h-full w-full py-1">
+        <div class="bg-white p-3 rounded-full mb-3 shadow-sm border border-gray-100 group-hover:scale-110 transition-transform duration-300">
+          <Shield class="h-6 w-6 text-rose-600" />
         </div>
-        <p class="text-gray-900 text-lg font-semibold mb-1">点击或拖拽上传图片</p>
-        <p class="text-gray-500 text-sm">支持 JPG、PNG、HEIC，可批量处理</p>
+        <p class="text-gray-900 text-base font-semibold mb-1">点击或拖拽上传图片</p>
+        <p class="text-gray-500 text-xs">支持 JPG、PNG、HEIC，可批量处理</p>
       </div>
     </div>
     
     <!-- 统计信息和批量操作 -->
-    <div v-if="state.images.length > 0 && !isProcessing" class="mt-8">
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <div v-if="state.images.length > 0 && !isProcessing" class="mt-4">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
         <!-- 统计信息 -->
         <div class="flex flex-wrap gap-4">
-          <div class="flex items-center gap-2 text-sm">
+          <div class="flex items-center gap-1.5 text-xs">
             <span class="text-gray-500">共</span>
-            <span class="font-semibold text-gray-900">{{ stats.total }}</span>
+            <span class="font-bold text-gray-900">{{ stats.total }}</span>
             <span class="text-gray-500">张图片</span>
           </div>
-          <div class="flex items-center gap-2 text-sm">
-            <Camera class="w-4 h-4 text-blue-500" />
-            <span class="font-semibold text-blue-600">{{ stats.withExif }}</span>
-            <span class="text-gray-500">包含 EXIF 数据</span>
+          <div class="flex items-center gap-1.5 text-xs">
+            <Camera class="w-3.5 h-3.5 text-blue-500" />
+            <span class="font-bold text-blue-600">{{ stats.withExif }}</span>
+            <span class="text-gray-500 font-medium">包含 EXIF 数据</span>
           </div>
-          <div v-if="stats.withGPS > 0" class="flex items-center gap-2 text-sm">
-            <MapPin class="w-4 h-4 text-red-500" />
-            <span class="font-semibold text-red-600">{{ stats.withGPS }}</span>
-            <span class="text-gray-500">包含 GPS 位置</span>
+          <div v-if="stats.withGPS > 0" class="flex items-center gap-1.5 text-xs">
+            <MapPin class="w-3.5 h-3.5 text-red-500" />
+            <span class="font-bold text-red-600">{{ stats.withGPS }}</span>
+            <span class="text-gray-500 font-medium">包含 GPS 位置</span>
           </div>
         </div>
         
         <!-- 批量下载按钮 -->
         <button 
-          class="bg-rose-600 hover:bg-rose-700 text-white px-6 py-2.5 rounded-lg transition-colors flex items-center gap-2 shadow-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
           @click="downloadAllCleanedImages"
           :disabled="isProcessing"
         >
-          <Download class="h-4 w-4" />
+          <Download class="h-3.5 w-3.5" />
           一键清除并批量下载
         </button>
       </div>
       
       <!-- 图片列表 -->
-      <div class="space-y-6">
-        <div v-for="(image, index) in state.images" :key="index" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500 to-pink-500"></div>
+      <div class="space-y-3">
+        <div v-for="(image, index) in state.images" :key="index" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative">
+          <div class="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-rose-500 to-pink-500"></div>
           
-          <div class="p-6">
-            <div class="flex flex-col lg:flex-row gap-6">
+          <div class="p-4">
+            <div class="flex flex-col lg:flex-row gap-4">
               <!-- 图片预览 -->
-              <div class="shrink-0">
+              <div class="shrink-0 flex flex-col items-center justify-center bg-gray-50/20 p-2 rounded-lg border border-gray-100/50">
                 <img 
                   :src="previewUrls.get(getPreviewKey(index))" 
                   alt="图片预览" 
-                  class="w-48 h-48 object-cover rounded-lg shadow-sm bg-gray-100"
+                  class="w-32 h-32 object-cover rounded-lg shadow-sm bg-gray-100"
                 />
-                <div class="mt-2 text-center">
-                  <p class="text-sm font-medium text-gray-900 truncate max-w-[192px]">{{ image.original.name }}</p>
-                  <p class="text-xs text-gray-500">{{ formatFileSize(image.original.size) }}</p>
+                <div class="mt-2 text-center max-w-[128px]">
+                  <p class="text-xs font-semibold text-gray-900 truncate" :title="image.original.name">{{ image.original.name }}</p>
+                  <p class="text-[10px] text-gray-400 font-mono mt-0.5">{{ formatFileSize(image.original.size) }}</p>
                 </div>
               </div>
               
               <!-- EXIF 信息 -->
               <div class="flex-1 min-w-0">
                 <!-- 加载状态 -->
-                <div v-if="image.isProcessing" class="flex items-center justify-center h-48">
-                  <div class="animate-spin rounded-full h-8 w-8 border-2 border-rose-600 border-t-transparent"></div>
+                <div v-if="image.isProcessing" class="flex items-center justify-center h-32">
+                  <div class="animate-spin rounded-full h-6 w-6 border-2 border-rose-600 border-t-transparent"></div>
                 </div>
                 
                 <!-- 无数据状态 -->
-                <div v-else-if="!image.exifData?.hasData" class="flex flex-col items-center justify-center h-48 text-center">
-                  <CheckCircle class="w-12 h-12 text-green-500 mb-3" />
-                  <p class="text-gray-900 font-medium">未检测到隐私信息</p>
-                  <p class="text-gray-500 text-sm mt-1">此图片不包含 EXIF 元数据</p>
+                <div v-else-if="!image.exifData?.hasData" class="flex flex-col items-center justify-center h-32 text-center">
+                  <CheckCircle class="w-10 h-10 text-green-500 mb-2" />
+                  <p class="text-sm font-semibold text-gray-900">未检测到隐私信息</p>
+                  <p class="text-xs text-gray-400 mt-0.5">此图片不包含 EXIF 元数据</p>
                 </div>
                 
                 <!-- 有数据状态 -->
-                <div v-else class="space-y-4">
+                <div v-else class="space-y-3">
                   <!-- GPS 警告 -->
-                  <div v-if="image.exifData.hasGPS" class="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <AlertTriangle class="w-5 h-5 text-red-600 shrink-0" />
-                    <p class="text-sm text-red-800">
-                      <span class="font-semibold">警告：</span>此图片包含 GPS 位置信息，可能暴露您的行踪！
+                  <div v-if="image.exifData.hasGPS" class="flex items-center gap-1.5 p-2 bg-red-50 border border-red-200 rounded-lg">
+                    <AlertTriangle class="w-4 h-4 text-red-600 shrink-0" />
+                    <p class="text-xs text-red-800">
+                      <span class="font-bold">警告：</span>此图片包含 GPS 位置信息，可能暴露您的行踪！
                     </p>
                   </div>
                   
                   <!-- 信息分组 -->
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                     <!-- 拍摄信息 -->
-                    <div v-if="Object.keys(image.exifData.camera).length > 0" class="space-y-2">
-                       <h4 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <Camera class="w-4 h-4" />
+                    <div v-if="Object.keys(image.exifData.camera).length > 0" class="space-y-1 bg-gray-50/50 p-2.5 rounded-lg border border-gray-100">
+                       <h4 class="text-xs font-bold text-gray-700 flex items-center gap-1">
+                        <Camera class="w-3.5 h-3.5 text-gray-500" />
                         拍摄信息
                       </h4>
-                      <dl class="space-y-1">
-                        <div v-for="(value, key) in image.exifData.camera" :key="key" class="flex text-sm">
-                          <dt class="text-gray-500 w-24 shrink-0">{{ key }}</dt>
-                          <dd class="text-gray-900 truncate">{{ value }}</dd>
+                      <dl class="space-y-0.5 text-[11px]">
+                        <div v-for="(value, key) in image.exifData.camera" :key="key" class="flex">
+                          <dt class="text-gray-400 w-16 shrink-0">{{ key }}</dt>
+                          <dd class="text-gray-800 truncate">{{ value }}</dd>
                         </div>
                       </dl>
                     </div>
                     
                     <!-- GPS 信息 -->
-                    <div v-if="Object.keys(image.exifData.gps).length > 0" class="space-y-2">
-                      <h4 class="text-sm font-semibold text-red-700 flex items-center gap-2">
-                        <MapPin class="w-4 h-4" />
+                    <div v-if="Object.keys(image.exifData.gps).length > 0" class="space-y-1 bg-red-50/20 p-2.5 rounded-lg border border-red-100/50">
+                      <h4 class="text-xs font-bold text-red-700 flex items-center gap-1">
+                        <MapPin class="w-3.5 h-3.5 text-red-500" />
                         位置信息
                       </h4>
-                      <dl class="space-y-1">
-                        <div v-for="(value, key) in image.exifData.gps" :key="key" class="flex text-sm">
-                          <dt class="text-gray-500 w-24 shrink-0">{{ key }}</dt>
+                      <dl class="space-y-0.5 text-[11px]">
+                        <div v-for="(value, key) in image.exifData.gps" :key="key" class="flex">
+                          <dt class="text-gray-400 w-16 shrink-0">{{ key }}</dt>
                           <dd class="text-red-600 font-medium truncate">{{ value }}</dd>
                         </div>
                       </dl>
                     </div>
                     
                     <!-- 基础信息 -->
-                    <div v-if="Object.keys(image.exifData.basic).length > 0" class="space-y-2">
-                      <h4 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <Smartphone class="w-4 h-4" />
+                    <div v-if="Object.keys(image.exifData.basic).length > 0" class="space-y-1 bg-gray-50/50 p-2.5 rounded-lg border border-gray-100">
+                      <h4 class="text-xs font-bold text-gray-700 flex items-center gap-1">
+                        <Smartphone class="w-3.5 h-3.5 text-gray-500" />
                         基础信息
                       </h4>
-                      <dl class="space-y-1">
-                        <div v-for="(value, key) in image.exifData.basic" :key="key" class="flex text-sm">
-                          <dt class="text-gray-500 w-24 shrink-0">{{ key }}</dt>
-                          <dd class="text-gray-900 truncate">{{ value }}</dd>
+                      <dl class="space-y-0.5 text-[11px]">
+                        <div v-for="(value, key) in image.exifData.basic" :key="key" class="flex">
+                          <dt class="text-gray-400 w-16 shrink-0">{{ key }}</dt>
+                          <dd class="text-gray-800 truncate">{{ value }}</dd>
                         </div>
                       </dl>
                     </div>
                     
                     <!-- 软件信息 -->
-                    <div v-if="Object.keys(image.exifData.software).length > 0" class="space-y-2">
-                      <h4 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <Calendar class="w-4 h-4" />
+                    <div v-if="Object.keys(image.exifData.software).length > 0" class="space-y-1 bg-gray-50/50 p-2.5 rounded-lg border border-gray-100">
+                      <h4 class="text-xs font-bold text-gray-700 flex items-center gap-1">
+                        <Calendar class="w-3.5 h-3.5 text-gray-500" />
                         软件信息
                       </h4>
-                      <dl class="space-y-1">
-                        <div v-for="(value, key) in image.exifData.software" :key="key" class="flex text-sm">
-                          <dt class="text-gray-500 w-24 shrink-0">{{ key }}</dt>
-                          <dd class="text-gray-900 truncate">{{ value }}</dd>
+                      <dl class="space-y-0.5 text-[11px]">
+                        <div v-for="(value, key) in image.exifData.software" :key="key" class="flex">
+                          <dt class="text-gray-400 w-16 shrink-0">{{ key }}</dt>
+                          <dd class="text-gray-800 truncate">{{ value }}</dd>
                         </div>
                       </dl>
                     </div>
@@ -442,13 +447,13 @@ useSeoMeta({
               </div>
               
               <!-- 操作按钮 -->
-              <div class="shrink-0 flex lg:flex-col gap-2">
+              <div class="shrink-0 flex lg:flex-col items-center justify-center">
                 <button 
-                  class="flex-1 lg:flex-none px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="w-full px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                   @click="downloadCleanedImage(index)"
                   :disabled="image.isProcessing"
                 >
-                  <Download class="w-4 h-4" />
+                  <Download class="w-3.5 h-3.5" />
                   清除并下载
                 </button>
               </div>
@@ -459,3 +464,7 @@ useSeoMeta({
     </div>
   </div>
 </template>
+
+<style scoped>
+/* 可以在这里添加微调样式 */
+</style>

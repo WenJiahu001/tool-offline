@@ -220,39 +220,42 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
 </script>
 
 <template>
-  <div class="px-6 py-8 max-w-7xl mx-auto">
-    <div class="mb-6">
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">Markdown 编辑器</h1>
-      <p class="text-gray-500">编辑 Markdown 内容，实时预览渲染效果，支持代码高亮。</p>
-    </div>
+  <div class="max-w-[98%] xl:max-w-[95%] mx-auto space-y-3 px-3 py-4">
+    <ToolPageHeader
+      title="Markdown 编辑器"
+      description="编辑 Markdown 内容，实时预览渲染效果，支持代码高亮。"
+      icon="file-text"
+      icon-bg="bg-indigo-50"
+      icon-color="text-indigo-600"
+    />
 
     <!-- 工具栏 -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 px-4 py-3 mb-4 flex items-center justify-between flex-wrap gap-3">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-2 px-3 flex items-center justify-between flex-wrap gap-3">
       <div class="flex items-center gap-2">
         <!-- 视图模式切换 -->
         <div class="flex items-center bg-gray-100 rounded-lg p-0.5">
           <button
             @click="viewMode = 'edit'"
-            class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-all"
+            class="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md transition-all"
             :class="viewMode === 'edit' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
           >
-            <Code class="h-4 w-4" />
+            <Code class="h-3.5 w-3.5" />
             编辑
           </button>
           <button
             @click="viewMode = 'preview'"
-            class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-all"
+            class="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md transition-all"
             :class="viewMode === 'preview' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
           >
-            <Eye class="h-4 w-4" />
+            <Eye class="h-3.5 w-3.5" />
             预览
           </button>
           <button
             @click="viewMode = 'split'"
-            class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-all"
+            class="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md transition-all"
             :class="viewMode === 'split' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
           >
-            <Columns class="h-4 w-4" />
+            <Columns class="h-3.5 w-3.5" />
             分栏
           </button>
         </div>
@@ -267,58 +270,58 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
         />
         <button
           @click="mdFileInput?.click()"
-          class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          class="flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
         >
-          <FileText class="h-4 w-4" />
+          <FileText class="h-3.5 w-3.5" />
           打开文件
         </button>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1.5">
         <button 
           @click="showShortcutHelp = true"
-          class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          class="flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm bg-white"
           title="查看快捷键帮助"
         >
-          <Keyboard class="h-4 w-4" />
-          <span>快捷键说明</span>
+          <Keyboard class="h-3.5 w-3.5" />
+          <span>快捷键</span>
         </button>
         <!-- 复制按钮 -->
         <button
           @click="copyMarkdown"
-          class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          class="flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors bg-white"
         >
-          <Copy class="h-4 w-4" />
+          <Copy class="h-3.5 w-3.5" />
           {{ mdCopyFeedback || '复制MD' }}
         </button>
         <button
           @click="copyHtml"
-          class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          class="flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors bg-white"
         >
-          <Copy class="h-4 w-4" />
+          <Copy class="h-3.5 w-3.5" />
           {{ copyFeedback || '复制HTML' }}
         </button>
 
         <!-- 下载按钮 -->
         <button
           @click="downloadMarkdown"
-          class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          class="flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors bg-white"
           title="保存为 Markdown 文件"
         >
-          <Download class="h-4 w-4" />
+          <Download class="h-3.5 w-3.5" />
           <span>导出 .md</span>
-          <kbd class="hidden md:inline-flex items-center px-1 bg-gray-100 text-gray-400 rounded text-[10px] font-mono leading-none select-none ml-1">
+          <kbd class="hidden md:inline-flex items-center px-1 bg-gray-100 text-gray-400 rounded text-[9px] font-mono leading-none select-none ml-1">
             {{ isMac ? '⌘S' : 'Ctrl+S' }}
           </kbd>
         </button>
         <button
           @click="downloadHtml"
-          class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-gray-900 hover:bg-black text-white rounded-lg transition-colors shadow-sm"
+          class="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-gray-900 hover:bg-black text-white rounded-lg transition-colors shadow-sm"
           title="导出为网页 HTML"
         >
-          <Download class="h-4 w-4" />
+          <Download class="h-3.5 w-3.5" />
           <span>导出 .html</span>
-          <kbd class="hidden md:inline-flex items-center px-1 bg-white/20 text-white rounded text-[10px] font-mono leading-none select-none ml-1">
+          <kbd class="hidden md:inline-flex items-center px-1 bg-white/20 text-white rounded text-[9px] font-mono leading-none select-none ml-1">
             {{ isMac ? '⌘⌥E' : 'Ctrl+Alt+E' }}
           </kbd>
         </button>
@@ -326,23 +329,23 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
     </div>
 
     <!-- 编辑器主体 -->
-    <div class="flex gap-4" style="height: calc(100vh - 240px); min-height: 400px;">
+    <div class="flex gap-4 h-[calc(100vh-220px)] min-h-[550px]">
       <!-- 编辑区域 -->
       <div
         v-if="viewMode === 'edit' || viewMode === 'split'"
         class="flex flex-col flex-1 min-w-0"
       >
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col flex-1 overflow-hidden">
-          <div class="px-4 py-2 border-b border-gray-100 flex items-center justify-between">
-            <span class="text-xs font-medium text-gray-400 uppercase tracking-wide">Markdown</span>
-            <span class="text-xs text-gray-400">{{ stats.lines }} 行 · {{ stats.chars }} 字符</span>
+          <div class="px-3 py-1.5 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+            <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Markdown</span>
+            <span class="text-[10px] text-gray-400 font-mono">{{ stats.lines }} 行 · {{ stats.chars }} 字符</span>
           </div>
           <textarea
             ref="editorRef"
             v-model="markdownContent"
             @scroll="handleEditorScroll"
             @keydown="handleKeydown"
-            class="flex-1 w-full p-4 resize-none focus:outline-none font-mono text-sm leading-relaxed text-gray-800 bg-white"
+            class="flex-1 w-full p-3 resize-none focus:outline-none font-mono text-sm leading-relaxed text-gray-800 bg-white"
             placeholder="在此输入 Markdown 内容..."
             spellcheck="false"
           ></textarea>
@@ -355,16 +358,16 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
         class="flex flex-col flex-1 min-w-0"
       >
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col flex-1 overflow-hidden relative">
-          <div class="px-4 py-2 border-b border-gray-100 flex items-center justify-between">
+          <div class="px-3 py-1.5 border-b border-gray-100 flex items-center justify-between bg-gray-50">
             <div class="flex items-center gap-2">
-              <span class="text-xs font-medium text-gray-400 uppercase tracking-wide">预览</span>
-              <Loader2 v-if="isRendering" class="w-3.5 h-3.5 text-gray-400 animate-spin" />
+              <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">预览</span>
+              <Loader2 v-if="isRendering" class="w-3 h-3 text-gray-400 animate-spin" />
             </div>
-            <span class="text-xs text-gray-400">{{ stats.words }} 词</span>
+            <span class="text-[10px] text-gray-400 font-mono">{{ stats.words }} 词</span>
           </div>
           <div
             ref="previewRef"
-            class="flex-1 overflow-y-auto p-6 markdown-body"
+            class="flex-1 overflow-y-auto p-4 markdown-body"
             :class="{ 'opacity-50': isRendering }"
             v-html="renderedHtml"
           ></div>

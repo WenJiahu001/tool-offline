@@ -227,7 +227,7 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
 </script>
 
 <template>
-  <div class="max-w-6xl mx-auto space-y-6">
+  <div class="max-w-[98%] xl:max-w-[95%] mx-auto space-y-3">
     <!-- 头部标题 -->
     <ToolPageHeader
       title="SQL 格式化与美化"
@@ -246,39 +246,39 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
     />
 
     <!-- 控制面板 -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-      <div class="flex flex-wrap items-center gap-4">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-2 px-3">
+      <div class="flex flex-wrap items-center gap-3">
         <!-- 数据库方言 -->
-        <div class="flex items-center gap-2 text-sm">
+        <div class="flex items-center gap-1.5 text-xs">
           <span class="text-gray-500 font-medium whitespace-nowrap">方言:</span>
           <select
             v-model="selectedLanguage"
             @change="formatSql"
-            class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="px-2 py-1 border border-gray-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option v-for="d in dialects" :key="d.value" :value="d.value">{{ d.label }}</option>
           </select>
         </div>
 
         <!-- 关键字大小写 -->
-        <div class="flex items-center gap-2 text-sm">
+        <div class="flex items-center gap-1.5 text-xs">
           <span class="text-gray-500 font-medium whitespace-nowrap">关键字:</span>
           <select
             v-model="keywordCase"
             @change="formatSql"
-            class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="px-2 py-1 border border-gray-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option v-for="c in cases" :key="c.value" :value="c.value">{{ c.label }}</option>
           </select>
         </div>
 
         <!-- 缩进样式 -->
-        <div class="flex items-center gap-2 text-sm">
+        <div class="flex items-center gap-1.5 text-xs">
           <span class="text-gray-500 font-medium whitespace-nowrap">缩进:</span>
           <select
             v-model="indentStyle"
             @change="formatSql"
-            class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="px-2 py-1 border border-gray-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option v-for="i in indents" :key="i.value" :value="i.value">{{ i.label }}</option>
           </select>
@@ -287,19 +287,19 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
         <div class="flex-1"></div>
 
         <!-- 快捷操作 -->
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1.5">
           <button
             @click="loadDemo"
-            class="px-3 py-1.5 text-blue-600 hover:bg-blue-50 text-sm font-medium rounded-lg transition-colors flex items-center gap-1"
+            class="px-2.5 py-1 text-blue-600 hover:bg-blue-50 text-xs font-medium rounded-lg transition-colors flex items-center gap-1"
           >
-            <Sparkles class="w-4 h-4" />
+            <Sparkles class="w-3.5 h-3.5" />
             载入示例
           </button>
           <button
             @click="clearAll"
-            class="px-3 py-1.5 text-gray-500 hover:bg-gray-50 text-sm font-medium rounded-lg transition-colors flex items-center gap-1"
+            class="px-2.5 py-1 text-gray-500 hover:bg-gray-50 text-xs font-medium rounded-lg transition-colors flex items-center gap-1"
           >
-            <RotateCcw class="w-4 h-4" />
+            <RotateCcw class="w-3.5 h-3.5" />
             <span>重置</span>
             <kbd class="hidden md:inline-flex items-center px-1 bg-gray-100 text-gray-400 border border-gray-200 rounded text-[9px] font-mono leading-none select-none">
               {{ isMac ? '⌘D' : 'Ctrl+D' }}
@@ -307,10 +307,10 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
           </button>
           <button 
             @click="showShortcutHelp = true"
-            class="px-3 py-1.5 text-gray-500 hover:bg-gray-50 border border-gray-200 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+            class="px-2.5 py-1 text-gray-500 hover:bg-gray-50 border border-gray-200 text-xs font-medium rounded-lg transition-colors flex items-center gap-1 shadow-sm"
           >
-            <Keyboard class="w-4 h-4" />
-            <span>快捷键说明</span>
+            <Keyboard class="w-3.5 h-3.5" />
+            <span>快捷键</span>
           </button>
         </div>
       </div>
@@ -318,23 +318,23 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
 
     <!-- 主编辑工作区 -->
     <div 
-      class="grid grid-cols-1 lg:grid-cols-2 gap-6"
+      class="grid grid-cols-1 lg:grid-cols-2 gap-4"
       :class="{ 'ring-2 ring-blue-500 rounded-xl': isDragging }"
       @dragover="handleDragOver"
       @dragleave="handleDragLeave"
       @drop="(e) => handleDrop(e, handleFileSelect)"
     >
       <!-- 左侧：输入框 -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-[520px]">
-        <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-[calc(100vh-230px)] min-h-[550px]">
+        <div class="px-3 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <span class="text-sm font-semibold text-gray-700">原始 SQL 输入</span>
+            <span class="text-xs font-semibold text-gray-700">原始 SQL 输入</span>
             <button 
               @click="triggerUpload"
-              class="p-1.5 hover:bg-gray-200 rounded text-gray-500 transition-colors"
+              class="p-1 hover:bg-gray-200 rounded text-gray-500 transition-colors"
               title="导入 SQL 文件"
             >
-              <Upload class="w-4 h-4" />
+              <Upload class="w-3.5 h-3.5" />
             </button>
             <input 
               type="file" 
@@ -344,38 +344,38 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
               @change="(e) => handleInputChange(e, handleFileSelect)"
             />
           </div>
-          <span class="text-xs text-gray-400 font-mono">{{ inputText.length }} 字符</span>
+          <span class="text-[10px] text-gray-400 font-mono">{{ inputText.length }} 字符</span>
         </div>
         
         <textarea
           ref="mainInput"
           v-model="inputText"
           placeholder="在此粘贴您的 SQL 语句，或将 .sql / .txt 文件拖拽至此..."
-          class="flex-1 w-full p-4 font-mono text-sm resize-none focus:outline-none"
+          class="flex-1 w-full p-3 font-mono text-sm resize-none focus:outline-none"
           spellcheck="false"
           @input="clearMessages"
         ></textarea>
 
         <!-- 转换执行栏 -->
-        <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex gap-2">
+        <div class="px-3 py-2 bg-gray-50 border-t border-gray-200 flex gap-2">
           <button
             @click="formatSql"
-            class="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1.5"
+            class="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1.5"
           >
-            <Code class="w-4 h-4" />
+            <Code class="w-3.5 h-3.5" />
             <span>格式化美化</span>
-            <kbd class="hidden md:inline-flex items-center px-1 bg-white/20 text-white rounded text-[10px] font-mono leading-none select-none">
+            <kbd class="hidden md:inline-flex items-center px-1 bg-white/20 text-white rounded text-[9px] font-mono leading-none select-none">
               {{ isMac ? '⌘↵' : 'Ctrl+Enter' }}
             </kbd>
           </button>
           <button
             @click="minifySql"
-            class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors flex items-center justify-center gap-1.5"
+            class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-1.5"
             title="将 SQL 压缩到一行"
           >
-            <Minimize2 class="w-4 h-4" />
+            <Minimize2 class="w-3.5 h-3.5" />
             <span>压缩</span>
-            <kbd class="hidden md:inline-flex items-center px-1 bg-gray-200 text-gray-400 rounded text-[10px] font-mono leading-none select-none">
+            <kbd class="hidden md:inline-flex items-center px-1 bg-gray-200 text-gray-400 rounded text-[9px] font-mono leading-none select-none">
               {{ isMac ? '⌘⇧↵' : 'Ctrl+Shift+Enter' }}
             </kbd>
           </button>
@@ -383,13 +383,13 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
       </div>
 
       <!-- 右侧：输出高亮区 -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-[520px]">
-        <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-          <span class="text-sm font-semibold text-gray-700">美化输出结果</span>
-          <span class="text-xs text-gray-400 font-mono">{{ outputText.length }} 字符</span>
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-[calc(100vh-230px)] min-h-[550px]">
+        <div class="px-3 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+          <span class="text-xs font-semibold text-gray-700">美化输出结果</span>
+          <span class="text-[10px] text-gray-400 font-mono">{{ outputText.length }} 字符</span>
         </div>
 
-        <div class="flex-1 p-4 overflow-auto font-mono text-sm bg-gray-50/50">
+        <div class="flex-1 p-3 overflow-auto font-mono text-sm bg-gray-50/50">
           <pre v-if="outputText" class="w-full h-full"><code v-html="highlightedSql" class="hljs sql"></code></pre>
           <div v-else class="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
             <Database class="w-12 h-12 stroke-[1.2]" />
@@ -398,18 +398,18 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
         </div>
 
         <!-- 输出导出栏 -->
-        <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex gap-2">
+        <div class="px-3 py-2 bg-gray-50 border-t border-gray-200 flex gap-2">
           <button
             @click="copyOutput"
             :disabled="!outputText"
-            class="flex-1 px-4 py-2.5 font-medium rounded-lg transition-all flex items-center justify-center gap-1.5"
+            class="flex-1 px-3 py-2 text-xs font-medium rounded-lg transition-all flex items-center justify-center gap-1.5"
             :class="[
               outputText 
                 ? 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200' 
                 : 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
             ]"
           >
-            <component :is="copied ? Check : Copy" class="w-4 h-4" />
+            <component :is="copied ? Check : Copy" class="w-3.5 h-3.5" />
             <span>{{ copied ? '复制成功' : '复制结果' }}</span>
             <kbd v-if="outputText" class="hidden md:inline-flex items-center px-1 bg-blue-100 text-blue-700 rounded text-[9px] font-mono leading-none select-none ml-1">
               {{ isMac ? '⌘⇧C' : 'Ctrl+Shift+C' }}
@@ -418,7 +418,7 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
           <button
             @click="downloadOutput"
             :disabled="!outputText"
-            class="px-4 py-2.5 font-medium rounded-lg transition-all flex items-center justify-center gap-1.5"
+            class="px-3 py-2 text-xs font-medium rounded-lg transition-all flex items-center justify-center gap-1.5"
             :class="[
               outputText 
                 ? 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 shadow-sm' 
@@ -426,7 +426,7 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
             ]"
             title="下载 .sql 文件"
           >
-            <Download class="w-4 h-4" />
+            <Download class="w-3.5 h-3.5" />
             下载 SQL
           </button>
         </div>

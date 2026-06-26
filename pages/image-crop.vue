@@ -1,32 +1,35 @@
 <template>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-900">图片裁剪工具</h1>
-      <p class="mt-2 text-gray-600">支持自定义尺寸和常用证件照尺寸裁剪，简单好用。</p>
-    </div>
+  <div class="max-w-[98%] xl:max-w-[95%] mx-auto space-y-3 px-3 py-4">
+    <ToolPageHeader
+      title="图片裁剪工具"
+      description="支持自定义尺寸和常用证件照尺寸裁剪，简单好用。"
+      icon="crop"
+      icon-bg="bg-blue-50"
+      icon-color="text-blue-600"
+    />
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <!-- 裁剪区域 -->
       <div class="lg:col-span-2">
         <div 
-          class="bg-gray-100 rounded-xl shadow-sm border border-gray-200 overflow-hidden relative h-[600px] flex items-center justify-center"
+          class="bg-gray-100 rounded-xl shadow-sm border border-gray-200 overflow-hidden relative h-[calc(100vh-280px)] min-h-[500px] flex items-center justify-center"
           :class="{ 'border-blue-500 bg-blue-50/50': isDragging }"
           @dragover="handleDragOver"
           @dragleave="handleDragLeave"
           @drop="(e) => handleDrop(e, handleFileSelect)"
         >
           <ClientOnly>
-             <div v-if="!imgSrc" class="text-center p-8">
-                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 mb-4">
-                  <Upload class="h-8 w-8 text-blue-600" />
+             <div v-if="!imgSrc" class="text-center p-6">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 mb-3">
+                  <Upload class="h-6 w-6 text-blue-600" />
                 </div>
-                <h3 class="text-lg font-medium text-gray-900">选择一张图片开始裁剪</h3>
-                <p class="mt-1 text-gray-500 mb-6">点击或将图片拖拽至此 (JPG, PNG)</p>
+                <h3 class="text-sm font-semibold text-gray-900">选择一张图片开始裁剪</h3>
+                <p class="mt-1 text-xs text-gray-500 mb-4">点击或将图片拖拽至此 (JPG, PNG)</p>
                 <button
                   @click="triggerUpload"
-                  class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
-                  <Upload class="w-5 h-5 mr-2" />
+                  <Upload class="w-4 h-4 mr-1.5" />
                   上传图片
                 </button>
              </div>
@@ -67,69 +70,69 @@
         </div>
         
         <!-- 底部工具栏 (仅在有图片时显示) -->
-        <div v-if="imgSrc" class="mt-4 flex flex-wrap gap-4 items-center justify-center bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-           <button @click="rotateLeft" class="p-2 hover:bg-gray-100 rounded-lg text-gray-600" title="向左旋转">
-             <RotateCcw class="w-5 h-5" />
+        <div v-if="imgSrc" class="mt-3 flex flex-wrap gap-2.5 items-center justify-center bg-white p-2 rounded-xl shadow-sm border border-gray-200">
+           <button @click="rotateLeft" class="p-1.5 hover:bg-gray-100 rounded text-gray-600" title="向左旋转">
+             <RotateCcw class="w-4 h-4" />
            </button>
-           <button @click="rotateRight" class="p-2 hover:bg-gray-100 rounded-lg text-gray-600" title="向右旋转">
-             <RotateCw class="w-5 h-5" />
+           <button @click="rotateRight" class="p-1.5 hover:bg-gray-100 rounded text-gray-600" title="向右旋转">
+             <RotateCw class="w-4 h-4" />
            </button>
-           <div class="w-px h-6 bg-gray-300 mx-2"></div>
-           <button @click="changeScale(1)" class="p-2 hover:bg-gray-100 rounded-lg text-gray-600" title="放大">
-             <ZoomIn class="w-5 h-5" />
+           <div class="w-px h-5 bg-gray-300 mx-1"></div>
+           <button @click="changeScale(1)" class="p-1.5 hover:bg-gray-100 rounded text-gray-600" title="放大">
+             <ZoomIn class="w-4 h-4" />
            </button>
-           <button @click="changeScale(-1)" class="p-2 hover:bg-gray-100 rounded-lg text-gray-600" title="缩小">
-             <ZoomOut class="w-5 h-5" />
+           <button @click="changeScale(-1)" class="p-1.5 hover:bg-gray-100 rounded text-gray-600" title="缩小">
+             <ZoomOut class="w-4 h-4" />
            </button>
-           <div class="w-px h-6 bg-gray-300 mx-2"></div>
-           <button @click="resetObj" class="p-2 hover:bg-gray-100 rounded-lg text-gray-600" title="重置">
-             <RefreshCw class="w-5 h-5" />
+           <div class="w-px h-5 bg-gray-300 mx-1"></div>
+           <button @click="resetObj" class="p-1.5 hover:bg-gray-100 rounded text-gray-600" title="重置">
+             <RefreshCw class="w-4 h-4" />
            </button>
         </div>
       </div>
 
       <!-- 右侧控制面板 -->
-      <div class="space-y-6">
+      <div class="space-y-4">
         <!-- 尺寸设置 -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">裁剪尺寸</h3>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <h3 class="text-sm font-semibold text-gray-900 mb-3">裁剪尺寸</h3>
           
-          <div class="space-y-4">
+          <div class="space-y-3.5">
             <!-- 预设尺寸 -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">常用尺寸</label>
+              <label class="block text-xs font-semibold text-gray-500 mb-1.5">常用尺寸</label>
               <div class="grid grid-cols-2 gap-2">
                 <button
                   v-for="preset in presets"
                   :key="preset.name"
                   @click="applyPreset(preset)"
                   :class="[
-                    'px-3 py-2 text-sm text-left rounded-md border transition-colors',
+                    'px-2.5 py-1.5 text-xs text-left rounded-md border transition-colors',
                     currentPreset?.name === preset.name
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700 font-semibold'
                       : 'border-gray-200 hover:border-blue-300 text-gray-700'
                   ]"
                 >
-                  <div class="font-medium">{{ preset.name }}</div>
-                  <div class="text-xs text-gray-500">{{ preset.width }}x{{ preset.height }}mm</div>
+                  <div>{{ preset.name }}</div>
+                  <div class="text-[10px] text-gray-400 font-mono mt-0.5">{{ preset.width }}x{{ preset.height }}mm</div>
                 </button>
               </div>
             </div>
 
             <!-- 自定义尺寸 -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">自定义 (像素)</label>
+              <label class="block text-xs font-semibold text-gray-500 mb-1.5">自定义 (像素)</label>
               <div class="flex items-center gap-2">
                 <div class="relative rounded-md shadow-sm">
                    <input
                      v-model.number="customWidth"
                      type="number"
-                     class="block w-full rounded-md border-gray-300 border p-2 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                     class="block w-full rounded-md border-gray-300 border p-1.5 focus:border-blue-500 focus:ring-blue-500 text-xs font-mono"
                      placeholder="宽"
                      @input="handleCustomSizeChange"
                    />
                    <div class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
-                     <span class="text-gray-500 sm:text-sm">px</span>
+                     <span class="text-gray-400 text-[10px]">px</span>
                    </div>
                 </div>
                 <span class="text-gray-400">×</span>
@@ -137,12 +140,12 @@
                    <input
                      v-model.number="customHeight"
                      type="number"
-                     class="block w-full rounded-md border-gray-300 border p-2 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                     class="block w-full rounded-md border-gray-300 border p-1.5 focus:border-blue-500 focus:ring-blue-500 text-xs font-mono"
                      placeholder="高"
                      @input="handleCustomSizeChange"
                    />
                    <div class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
-                     <span class="text-gray-500 sm:text-sm">px</span>
+                     <span class="text-gray-400 text-[10px]">px</span>
                    </div>
                 </div>
               </div>
@@ -151,9 +154,9 @@
                     id="fixed-ratio" 
                     type="checkbox" 
                     v-model="option.fixed" 
-                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    class="h-3.5 w-3.5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
                  >
-                 <label for="fixed-ratio" class="ml-2 block text-sm text-gray-900">
+                 <label for="fixed-ratio" class="ml-1.5 block text-xs text-gray-700 cursor-pointer">
                    锁定比例
                  </label>
               </div>
@@ -163,21 +166,21 @@
         </div>
 
         <!-- 导出设置 -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-           <h3 class="text-lg font-medium text-gray-900 mb-4">导出</h3>
-           <div class="space-y-4">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+           <h3 class="text-sm font-semibold text-gray-900 mb-3">导出</h3>
+           <div class="space-y-2">
               <button
                 @click="downloadImage"
                 :disabled="!imgSrc"
-                class="w-full flex items-center justify-center px-4 py-3 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="w-full flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-xs font-semibold rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Download class="w-5 h-5 mr-2" />
+                <Download class="w-4 h-4 mr-1.5" />
                 下载裁剪图片
               </button>
               
               <button
                 @click="triggerUpload"
-                class="w-full text-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+                class="w-full text-center px-4 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
               >
                 重新上传
               </button>
@@ -439,6 +442,8 @@ const downloadImage = () => {
      }
   })
 }
+
+useShortcuts([])
 </script>
 
 <style scoped>

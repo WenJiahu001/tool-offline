@@ -1,17 +1,24 @@
+import { jsonrepair } from 'jsonrepair'
+
 export const smartFix = (jsonStr: string) => {
-  let fixed = jsonStr.trim()
+  try {
+    return jsonrepair(jsonStr)
+  } catch (error) {
+    // Fallback: 如果 jsonrepair 报错，使用原有的正则匹配兜底
+    let fixed = jsonStr.trim()
 
-  fixed = fixed.replace(/\/\/.*$/gm, '')
-  fixed = fixed.replace(/\/\*[\s\S]*?\*\//g, '')
-  fixed = fixed.replace(/'/g, '"')
-  fixed = fixed.replace(/(\{|\,)\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":')
-  fixed = fixed.replace(/,\s*([\}\]])/g, '$1')
-  fixed = fixed.replace(/:\s*undefined/g, ': null')
-  fixed = fixed.replace(/:\s*NaN/g, ': null')
-  fixed = fixed.replace(/:\s*Infinity/g, ': null')
-  fixed = fixed.replace(/:\s*-Infinity/g, ': null')
+    fixed = fixed.replace(/\/\/.*$/gm, '')
+    fixed = fixed.replace(/\/\*[\s\S]*?\*\//g, '')
+    fixed = fixed.replace(/'/g, '"')
+    fixed = fixed.replace(/(\{|\,)\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":')
+    fixed = fixed.replace(/,\s*([\}\]])/g, '$1')
+    fixed = fixed.replace(/:\s*undefined/g, ': null')
+    fixed = fixed.replace(/:\s*NaN/g, ': null')
+    fixed = fixed.replace(/:\s*Infinity/g, ': null')
+    fixed = fixed.replace(/:\s*-Infinity/g, ': null')
 
-  return fixed
+    return fixed
+  }
 }
 
 export const tryParseJson = (jsonStr: string, autoFix = false) => {

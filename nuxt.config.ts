@@ -36,7 +36,7 @@ export default defineNuxtConfig({
             globPatterns: ['**/*.{js,css,html,png,svg,ico}']
         },
         devOptions: {
-            enabled: true,
+            enabled: false,
             type: 'module',
             suppressWarnings: true
         }
@@ -59,7 +59,12 @@ export default defineNuxtConfig({
                     innerHTML: "if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js', { scope: '/' }) }) }",
                     type: 'text/javascript'
                 }
-            ] : []
+            ] : [
+                {
+                    innerHTML: "if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then(regs => { for (const reg of regs) { reg.unregister(); } }) }",
+                    type: 'text/javascript'
+                }
+            ]
         }
     },
 

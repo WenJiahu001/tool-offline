@@ -36,6 +36,12 @@ const compareJsonInput = ref('')
 // 输出
 const outputJson = ref('')
 
+// 输出视图模式 (text: 文本, tree: 树形)
+const outputViewMode = ref<'text' | 'tree'>('text')
+
+// 解析后的 JSON 数据对象
+const parsedData = ref<any>(null)
+
 // 复制状态
 const copied = ref(false)
 
@@ -84,6 +90,7 @@ const formatJson = async () => {
     const result = await parseJson(inputJson.value, true)
     if (result.success) {
       outputJson.value = JSON.stringify(result.data, null, indentSize.value)
+      parsedData.value = result.data
       if (result.fixed) {
         showSuccess('JSON 已自动修复并格式化')
       } else {
@@ -112,6 +119,7 @@ const compressJson = async () => {
     const result = await parseJson(inputJson.value, true)
     if (result.success) {
       outputJson.value = JSON.stringify(result.data)
+      parsedData.value = result.data
       showSuccess('压缩成功')
     } else {
       showError(`JSON 解析错误: ${result.error}`)
@@ -136,9 +144,11 @@ const escapeJson = async () => {
     const result = await parseJson(inputJson.value, true)
     if (result.success) {
       outputJson.value = JSON.stringify(JSON.stringify(result.data))
+      parsedData.value = result.data
       showSuccess('转义成功')
     } else {
       outputJson.value = JSON.stringify(inputJson.value)
+      parsedData.value = inputJson.value
       showSuccess('已将内容转义为字符串')
     }
   } catch (err: any) {
@@ -166,11 +176,14 @@ const unescapeJson = async () => {
         const innerResult = await parseJson(unescaped, false)
         if (innerResult.success) {
           outputJson.value = JSON.stringify(innerResult.data, null, indentSize.value)
+          parsedData.value = innerResult.data
         } else {
           outputJson.value = unescaped
+          parsedData.value = unescaped
         }
       } else {
         outputJson.value = JSON.stringify(unescaped, null, indentSize.value)
+        parsedData.value = unescaped
       }
       showSuccess('去除转义成功')
     } else {
@@ -196,6 +209,7 @@ const fixJson = async () => {
     const result = await parseJson(inputJson.value, true)
     if (result.success) {
       outputJson.value = JSON.stringify(result.data, null, indentSize.value)
+      parsedData.value = result.data
       if (result.fixed) {
         showSuccess('JSON 已成功修复！修复内容包括：单引号→双引号、未引用的键名、尾部逗号、注释等')
       } else {
@@ -246,6 +260,8 @@ const clearAll = () => {
   inputJson.value = ''
   compareJsonInput.value = ''
   outputJson.value = ''
+  parsedData.value = null
+  outputViewMode.value = 'text'
   clearMessages()
 }
 
@@ -338,45 +354,46 @@ useSeoMeta({
 </script>
 
 <template>
-  <div class="px-6 py-8 max-w-7xl mx-auto">
-    <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">JSON 工具</h1>
-        <p class="text-gray-500">格式化、压缩、转义、智能纠错、差异对比</p>
+  <div class="px-3 py-4 max-w-[98%] xl:max-w-[95%] mx-auto">
+    <!-- 标题区域 -->
+    <div class="mb-3.5 flex items-center justify-between gap-4">
+      <div class="flex items-baseline gap-3">
+        <h1 class="text-xl font-bold text-gray-900">JSON 工具</h1>
+        <p class="text-xs text-gray-400 hidden sm:inline">本地格式化、压缩、转义、纠错与差异对比，数据安全不上传</p>
       </div>
       <button 
         @click="showShortcutHelp = true"
-        class="flex items-center gap-1.5 self-start px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors border border-gray-200/50"
+        class="flex items-center gap-1 px-2.5 py-1 text-xs text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors border border-gray-200/50"
       >
         <Keyboard class="w-3.5 h-3.5" />
-        <span>快捷键说明</span>
+        <span>快捷键</span>
       </button>
     </div>
     
     <!-- 模式切换 -->
-    <div class="flex gap-2 mb-6">
+    <div class="flex gap-2 mb-3">
       <button
         @click="activeMode = 'format'"
         :class="[
-          'px-4 py-2 rounded-lg text-sm font-medium transition-all',
+          'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
           activeMode === 'format'
             ? 'bg-amber-600 text-white'
             : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
         ]"
       >
-        <FileJson class="w-4 h-4 inline-block mr-1.5 -mt-0.5" />
+        <FileJson class="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" />
         格式化/转义
       </button>
       <button
         @click="activeMode = 'compare'; diffResult = []"
         :class="[
-          'px-4 py-2 rounded-lg text-sm font-medium transition-all',
+          'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
           activeMode === 'compare'
             ? 'bg-amber-600 text-white'
             : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
         ]"
       >
-        <ArrowRightLeft class="w-4 h-4 inline-block mr-1.5 -mt-0.5" />
+        <ArrowRightLeft class="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" />
         差异对比
       </button>
     </div>
@@ -390,59 +407,59 @@ useSeoMeta({
     />
     
     <!-- 格式化/转义模式 -->
-    <div v-if="activeMode === 'format'" class="space-y-4">
+    <div v-if="activeMode === 'format'" class="space-y-3">
       <!-- 工具栏 -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-2 px-3">
         <div class="flex flex-wrap items-center gap-2">
           <button
             @click="formatJson"
-            class="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+            class="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium rounded-lg transition-colors flex items-center gap-1 shadow-sm"
           >
-            <Maximize2 class="w-4 h-4" />
+            <Maximize2 class="w-3.5 h-3.5" />
             <span>格式化</span>
-            <kbd class="hidden md:inline-flex items-center px-1 bg-white/20 text-white rounded text-[10px] font-mono leading-none select-none">
+            <kbd class="hidden md:inline-flex items-center px-1 bg-white/20 text-white rounded text-[9px] font-mono leading-none select-none">
               {{ isMac ? '⌘↵' : 'Ctrl+Enter' }}
             </kbd>
           </button>
           <button
             @click="compressJson"
-            class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5"
+            class="px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-lg transition-colors flex items-center gap-1"
           >
-            <Minimize2 class="w-4 h-4" />
+            <Minimize2 class="w-3.5 h-3.5" />
             <span>压缩</span>
-            <kbd class="hidden md:inline-flex items-center px-1 bg-gray-200 text-gray-400 rounded text-[10px] font-mono leading-none select-none">
+            <kbd class="hidden md:inline-flex items-center px-1 bg-gray-200 text-gray-400 rounded text-[9px] font-mono leading-none select-none">
               {{ isMac ? '⌘⇧↵' : 'Ctrl+Shift+Enter' }}
             </kbd>
           </button>
           <button
             @click="escapeJson"
-            class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5"
+            class="px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-lg transition-colors flex items-center gap-1"
           >
-            <Code class="w-4 h-4" />
+            <Code class="w-3.5 h-3.5" />
             转义
           </button>
           <button
             @click="unescapeJson"
-            class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5"
+            class="px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-lg transition-colors flex items-center gap-1"
           >
-            <Code class="w-4 h-4" />
+            <Code class="w-3.5 h-3.5" />
             去转义
           </button>
           <button
             @click="fixJson"
-            class="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5"
+            class="px-2.5 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs font-medium rounded-lg transition-colors flex items-center gap-1"
           >
-            <Wrench class="w-4 h-4" />
+            <Wrench class="w-3.5 h-3.5" />
             智能纠错
           </button>
           
           <div class="flex-1"></div>
           
-          <div class="flex items-center gap-2 text-sm text-gray-500">
+          <div class="flex items-center gap-1.5 text-xs text-gray-500">
             <span>缩进:</span>
             <select
               v-model="indentSize"
-              class="px-2 py-1 border border-gray-200 rounded text-sm"
+              class="px-1.5 py-0.5 border border-gray-200 rounded text-xs focus:outline-none focus:border-amber-500"
             >
               <option :value="2">2 空格</option>
               <option :value="4">4 空格</option>
@@ -452,10 +469,10 @@ useSeoMeta({
           
           <button
             @click="clearAll"
-            class="px-3 py-2 text-gray-500 hover:text-gray-700 text-sm transition-colors flex items-center gap-1"
+            class="px-2.5 py-1.5 text-gray-500 hover:text-gray-700 text-xs transition-colors flex items-center gap-1"
           >
             <span>清空</span>
-            <kbd class="hidden md:inline-flex items-center px-1 bg-gray-100 text-gray-400 border border-gray-200 rounded text-[10px] font-mono leading-none select-none">
+            <kbd class="hidden md:inline-flex items-center px-1 bg-gray-100 text-gray-400 border border-gray-200 rounded text-[9px] font-mono leading-none select-none">
               {{ isMac ? '⌥C' : 'Ctrl+D' }}
             </kbd>
           </button>
@@ -472,7 +489,7 @@ useSeoMeta({
       >
         <!-- 输入 -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative">
-          <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+          <div class="px-4 py-2.5 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
             <div class="flex items-center gap-2">
               <span class="text-sm font-medium text-gray-700">输入</span>
               <button 
@@ -496,15 +513,43 @@ useSeoMeta({
             ref="mainInput"
             v-model="inputJson"
             placeholder="在此输入 JSON 内容，或将文件拖拽至此..."
-            class="w-full h-96 p-4 font-mono text-sm resize-none focus:outline-none"
+            class="w-full h-[calc(100vh-240px)] min-h-[550px] p-4 font-mono text-sm resize-none focus:outline-none"
             spellcheck="false"
           ></textarea>
         </div>
         
         <!-- 输出 -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-            <span class="text-sm font-medium text-gray-700">输出</span>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+          <div class="px-4 py-2.5 bg-gray-50 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
+            <div class="flex items-center gap-3">
+              <span class="text-sm font-medium text-gray-700">输出</span>
+              <div v-if="outputJson" class="inline-flex bg-gray-200/50 p-0.5 rounded-lg border border-gray-200/10">
+                <button
+                  @click="outputViewMode = 'text'"
+                  type="button"
+                  :class="[
+                    'px-2.5 py-0.5 text-xs font-medium rounded-md transition-all',
+                    outputViewMode === 'text'
+                      ? 'bg-white text-gray-800 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700'
+                  ]"
+                >
+                  文本
+                </button>
+                <button
+                  @click="outputViewMode = 'tree'"
+                  type="button"
+                  :class="[
+                    'px-2.5 py-0.5 text-xs font-medium rounded-md transition-all',
+                    outputViewMode === 'tree'
+                      ? 'bg-white text-gray-800 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700'
+                  ]"
+                >
+                  树形
+                </button>
+              </div>
+            </div>
             <div class="flex items-center gap-2">
               <button
                 v-if="outputJson"
@@ -539,33 +584,39 @@ useSeoMeta({
               </button>
             </div>
           </div>
-          <textarea
-            v-model="outputJson"
-            readonly
-            placeholder="处理结果将显示在这里..."
-            class="w-full h-96 p-4 font-mono text-sm resize-none focus:outline-none bg-gray-50/50"
-            spellcheck="false"
-          ></textarea>
+          <div class="w-full h-[calc(100vh-240px)] min-h-[550px] bg-gray-50/50 relative flex flex-col min-h-0 overflow-hidden">
+            <div v-if="outputViewMode === 'tree' && parsedData" class="w-full h-full overflow-hidden flex flex-col">
+              <JsonTreeView :data="parsedData" class="flex-1 min-h-0" />
+            </div>
+            <textarea
+              v-else
+              v-model="outputJson"
+              readonly
+              placeholder="处理结果将显示在这里..."
+              class="w-full h-full p-4 font-mono text-sm resize-none focus:outline-none bg-transparent"
+              spellcheck="false"
+            ></textarea>
+          </div>
         </div>
       </div>
     </div>
     
     <!-- 差异对比模式 -->
-    <div v-if="activeMode === 'compare'" class="space-y-4">
+    <div v-if="activeMode === 'compare'" class="space-y-3">
       <!-- 工具栏 -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-2 px-3">
         <div class="flex items-center gap-2">
           <button
             @click="compareJsons"
-            class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+            class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
           >
-            <ArrowRightLeft class="w-4 h-4" />
+            <ArrowRightLeft class="w-3.5 h-3.5" />
             <span>开始对比</span>
-            <kbd class="hidden md:inline-flex items-center px-1 bg-white/20 text-white rounded text-[10px] font-mono leading-none select-none">Enter</kbd>
+            <kbd class="hidden md:inline-flex items-center px-1 bg-white/20 text-white rounded text-[9px] font-mono leading-none select-none">Enter</kbd>
           </button>
           <button
             @click="clearAll(); diffResult = []"
-            class="px-3 py-2 text-gray-500 hover:text-gray-700 text-sm transition-colors"
+            class="px-2.5 py-1.5 text-gray-500 hover:text-gray-700 text-xs transition-colors"
           >
             清空
           </button>
@@ -576,26 +627,26 @@ useSeoMeta({
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <!-- 左侧 -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
+          <div class="px-4 py-2.5 bg-gray-50 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
             <span class="text-sm font-medium text-gray-700">原始 JSON</span>
           </div>
           <textarea
             v-model="inputJson"
             placeholder="输入第一个 JSON..."
-            class="w-full h-64 p-4 font-mono text-sm resize-none focus:outline-none"
+            class="w-full h-[calc(100vh-320px)] min-h-[450px] p-4 font-mono text-sm resize-none focus:outline-none"
             spellcheck="false"
           ></textarea>
         </div>
         
         <!-- 右侧 -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative">
-          <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
+          <div class="px-4 py-2.5 bg-gray-50 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
             <span class="text-sm font-medium text-gray-700">对比 JSON</span>
           </div>
           <textarea
             v-model="compareJsonInput"
             placeholder="输入第二个 JSON..."
-            class="w-full h-64 p-4 font-mono text-sm resize-none focus:outline-none"
+            class="w-full h-[calc(100vh-320px)] min-h-[450px] p-4 font-mono text-sm resize-none focus:outline-none"
             spellcheck="false"
           ></textarea>
         </div>
@@ -606,7 +657,7 @@ useSeoMeta({
         <Loader2 class="w-8 h-8 text-amber-500 animate-spin mb-3" />
         <span class="text-gray-500">正在处理...</span>
       </div>
-
+ 
       <!-- 差异结果 -->
       <div v-if="hasCompared && !isProcessing" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
@@ -624,7 +675,7 @@ useSeoMeta({
               <div class="text-left text-gray-600 font-medium col-span-3">原始值</div>
               <div class="text-left text-gray-600 font-medium col-span-4">对比值</div>
             </div>
-            <div v-bind="diffContainerProps" class="max-h-96 overflow-auto">
+            <div v-bind="diffContainerProps" class="max-h-[500px] overflow-auto">
               <div v-bind="diffWrapperProps" class="divide-y divide-gray-100">
                 <div v-for="item in diffVirtualList" :key="item.index" class="grid grid-cols-12 gap-4 px-4 py-3 hover:bg-gray-50 items-center">
                   <div class="font-mono text-xs text-gray-900 col-span-3 break-all">{{ item.data.path }}</div>
@@ -655,18 +706,18 @@ useSeoMeta({
     </div>
     
     <!-- 使用提示 -->
-    <div class="mt-6 bg-amber-50 rounded-xl p-4 border border-amber-100">
-      <h4 class="text-sm font-semibold text-amber-800 mb-2">💡 功能说明</h4>
-      <ul class="text-xs text-amber-700 space-y-1">
-        <li>• <strong>格式化</strong>：美美化 JSON，添加缩进和换行</li>
-        <li>• <strong>压缩</strong>：移除所有空白字符，生成单行 JSON</li>
-        <li>• <strong>转义</strong>：将 JSON 转为可嵌入字符串的格式</li>
+    <div class="mt-4 bg-amber-50 rounded-xl p-3 border border-amber-100">
+      <h4 class="text-xs font-semibold text-amber-800 mb-1">💡 功能说明</h4>
+      <ul class="text-[11px] text-amber-700 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+        <li>• <strong>格式化</strong>：美化 JSON，增加缩进换行</li>
+        <li>• <strong>压缩</strong>：移除所有空白，生成单行 JSON</li>
+        <li>• <strong>转义</strong>：将 JSON 转为可嵌入字符格式</li>
         <li>• <strong>去转义</strong>：还原转义后的 JSON 字符串</li>
-        <li>• <strong>智能纠错</strong>：自动修复单引号、未引用键名、尾部逗号、注释等非标准格式</li>
-        <li>• <strong>差异对比</strong>：逐层对比两个 JSON 的差异</li>
+        <li>• <strong>智能纠错</strong>：自动修复单引号、尾部逗号等</li>
+        <li>• <strong>差异对比</strong>：逐层对比两个 JSON 差异</li>
       </ul>
     </div>
-
+ 
     <!-- 快捷键说明模态框 -->
     <ToolShortcutHelp 
       :show="showShortcutHelp" 
@@ -675,4 +726,3 @@ useSeoMeta({
     />
   </div>
 </template>
-
