@@ -2,7 +2,7 @@
 import { ref, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStorage } from '@vueuse/core'
-import { Code2, FileText, Image as ImageIcon, QrCode, ScanSearch, Shield, WandSparkles, Clock, Key, Binary, Search, HelpCircle, Keyboard, Database } from 'lucide-vue-next'
+import { Code2, FileDiff, FileJson2, FileText, Image as ImageIcon, QrCode, ScanSearch, Shield, WandSparkles, Clock, Key, Binary, Search, HelpCircle, Keyboard, Database } from 'lucide-vue-next'
 
 useSeoMeta({
   title: 'LocalTools - 免费且安全的在线图片处理与PDF工具箱',
@@ -173,6 +173,8 @@ const categoryIcons = {
 }
 
 const toolIcons = {
+  'file-diff': FileDiff,
+  'file-json-2': FileJson2,
   image: ImageIcon,
   crop: ScanSearch,
   shield: Shield,

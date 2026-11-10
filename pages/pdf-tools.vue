@@ -98,9 +98,6 @@ useShortcuts([])
     <ToolPageHeader
       title="PDF 合并工具"
       description="将多个 PDF 文件合并为一个文件，支持调整顺序。"
-      icon="files"
-      icon-bg="bg-red-50"
-      icon-color="text-red-600"
     />
     <ToolFeedback
       :error="errorMessage"

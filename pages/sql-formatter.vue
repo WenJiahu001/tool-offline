@@ -232,9 +232,6 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
     <ToolPageHeader
       title="SQL 格式化与美化"
       description="本地安全的 SQL 格式化与美化工具，支持 MySQL、PostgreSQL 等多种数据库方言，一键格式化与压缩。"
-      icon="database"
-      icon-bg="bg-blue-50"
-      icon-color="text-blue-600"
     />
 
     <!-- 消息反馈组件 -->

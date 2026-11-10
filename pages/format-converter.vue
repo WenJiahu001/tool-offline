@@ -137,9 +137,6 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
     <ToolPageHeader
       title="数据格式转换"
       description="JSON、YAML、Properties 格式互转，支持嵌套打平与结构还原。"
-      icon="file-json-2"
-      icon-bg="bg-fuchsia-50"
-      icon-color="text-fuchsia-600"
     />
 
     <!-- 工具栏 -->

@@ -126,9 +126,6 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
     <ToolPageHeader
       title="纯文本对比"
       description="对比两段代码或文本的变动差异，支持行级增删高亮。"
-      icon="file-diff"
-      icon-bg="bg-orange-50"
-      icon-color="text-orange-600"
     />
 
     <!-- 工具栏 -->

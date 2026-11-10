@@ -23,13 +23,15 @@ npm run generate # 生成静态站点
 npm run preview  # 预览构建产物
 npm run typecheck # Nuxt 类型检查
 npm test         # 运行基础测试
+npm run tauri    # 调用 Tauri CLI（桌面端，如 npm run tauri dev）
 ```
 
-当前没有独立 linter 配置。测试使用 `tests/run-tests.ts`，通过 Node assert + jiti 运行，覆盖部分工具函数和工具元数据。
+当前没有独立 linter 配置。测试使用 `tests/run-tests.ts`，通过 Node assert + jiti 运行，覆盖部分工具函数和工具元数据，并断言 `pages/` 页面文件与 `tools` 元数据的 route 双向对齐。
 
 ## 技术栈
 
-- **框架**: Nuxt 3，SPA 模式，无 SSR。已集成 `@vite-pwa/nuxt` 提供 PWA 离线桌面应用化支持。
+- **框架**: Nuxt 3，SPA 模式（`nuxt.config.ts` 中显式设置 `ssr: false`），无 SSR。已集成 `@vite-pwa/nuxt` 提供 PWA 离线安装支持。
+- **桌面端**: 使用 Tauri 2 打包，工程位于 `src-tauri/`，直接复用 `npm run generate` 产出的 `.output/public`。
 - **语言**: Vue 3 Composition API + TypeScript，页面统一使用 `<script setup lang="ts">`。
 - **样式**: Tailwind CSS，通过 `@nuxtjs/tailwindcss` 模块启用；没有自定义 `tailwind.config`，优先使用原子类。
 - **路由**: Nuxt 文件路由，`pages/` 下每个 `.vue` 文件对应一个页面。
@@ -51,6 +53,10 @@ npm test         # 运行基础测试
 | `diff` | 文本差异对比 |
 | `yaml` | YAML 解析与生成 |
 | `sql-formatter` | SQL 格式化与压缩 |
+| `cronstrue` | Cron 表达式中文语义化 |
+| `cron-parser` | Cron 表达式的下一次执行时间推算 |
+| `jsonrepair` | JSON 智能纠错 |
+| `@vueuse/core` | `useStorage` 持久化、`useVirtualList` 虚拟滚动等 |
 
 不要为纯前端功能引入 Node-only 依赖。此前的 `mysql2` 已移除，项目不需要数据库连接能力。
 
@@ -62,7 +68,10 @@ npm test         # 运行基础测试
 | `components/` | 通用 UI 组件 |
 | `composables/` | 组合式函数、工具元数据和复用状态逻辑 |
 | `utils/` | 文件、JSON、Markdown 等纯工具函数 |
+| `workers/` | JSON / Markdown / PDF 三类 Web Worker 入口 |
 | `layouts/default.vue` | 默认页面布局 |
+| `public/` | 静态资源与 PWA 图标（`icons/192x192.png`、`icons/512x512.png`） |
+| `src-tauri/` | Tauri 桌面端工程，Rust 侧目前只有默认壳，无自定义命令 |
 | `tests/` | 基础测试脚本 |
 | `nuxt.config.ts` | Nuxt 配置 |
 
@@ -74,6 +83,11 @@ npm test         # 运行基础测试
 | `composables/useFileUpload.ts` | `useFileUpload()` | 拖拽和点击上传逻辑 |
 | `composables/useToolFeedback.ts` | `useToolFeedback()` | 成功/错误反馈状态 |
 | `composables/useObjectUrlMap.ts` | `useObjectUrlMap()` | Object URL 创建、复用和释放 |
+| `composables/useAutoFocus.ts` | `useAutoFocus()` | 页面加载后自动聚焦输入框 |
+| `composables/useShortcuts.ts` | `useShortcuts()` | 页面级快捷键注册、`ToolShortcutHelp` 展示数据、Esc 返回首页 |
+| `composables/useJsonWorker.ts` | `useJsonWorker()` | JSON 解析 / 对比的 Worker RPC |
+| `composables/useMarkdownWorker.ts` | `useMarkdownWorker()` | Markdown 渲染的 Worker RPC |
+| `composables/usePdfWorker.ts` | `usePdfWorker()` | PDF 合并 / 图片转 PDF 的 Worker RPC |
 | `utils/file.ts` | `formatFileSize()` | 格式化文件大小 |
 | `utils/file.ts` | `downloadFile()` | 触发浏览器下载 |
 | `utils/file.ts` | `createImageUrl()` | 基于 File/Blob 创建 Object URL |
@@ -82,6 +96,7 @@ npm test         # 运行基础测试
 | `utils/base64-tools.ts` | `stringToBase64()`、`base64ToString()`、`fileToBase64()` | 文本与文件的 Base64 互转 |
 | `utils/jwt-tools.ts` | `base64UrlDecode()`、`parseJwt()` | JWT 解析与解码 |
 | `utils/properties.ts` | `parseProperties()`、`stringifyProperties()` | Properties 格式与 JS 对象互相转换，支持嵌套打平与结构还原 |
+| `utils/sql-minify.ts` | `minifySql()` | SQL 一键压缩，保留注释并正确跳过字符串内的分号 |
 
 Nuxt auto-import 会自动导入 composables 和 utils 中的导出，页面里无需为这些本地工具手写 import，除非现有上下文已经这么做或类型需要。
 
@@ -90,9 +105,12 @@ Nuxt auto-import 会自动导入 composables 和 utils 中的导出，页面里�
 | 组件 | 用途 |
 | --- | --- |
 | `components/AppNavbar.vue` | 全局导航栏 |
-| `components/ToolPageHeader.vue` | 工具页面标题区 |
+| `components/ToolPageHeader.vue` | 工具页面标题区，只接收 `title` 和 `description` 两个 prop |
 | `components/ToolUploadZone.vue` | 上传区域 |
 | `components/ToolFeedback.vue` | 成功/错误反馈展示 |
+| `components/ToolShortcutHelp.vue` | 快捷键帮助弹层，配合 `useShortcuts()` 使用 |
+| `components/JsonTreeView.vue` | JSON 树形视图入口 |
+| `components/JsonTreeViewNode.vue` | JSON 树形视图的递归节点 |
 
 新增页面或改造页面时，优先复用这些组件，保持各工具页面结构一致。
 
@@ -120,7 +138,9 @@ Nuxt auto-import 会自动导入 composables 和 utils 中的导出，页面里�
 | `sql-formatter.vue` | `/sql-formatter` | SQL 格式化与美化，支持多种数据库方言与关键字大小写定制，支持一键压缩 |
 
 
-新增工具页时，需要同步更新 `composables/useTools.ts` 的工具元数据，并在需要时补充 `tests/run-tests.ts` 中的基础断言。
+新增工具页时，必须同步更新 `composables/useTools.ts` 的工具元数据。`npm test` 会断言 `pages/` 下的页面文件与 `tools` 的 route 集合完全一致，任一侧漏改都会失败。
+
+首页卡片的图标来自 `pages/index.vue` 里的 `toolIcons` 映射表，`tools` 中新增 `icon` 取值时，必须同时在 `toolIcons` 中登记对应组件，否则卡片图标会渲染为空且不报错。
 
 ## 代码模式
 
@@ -146,6 +166,13 @@ Nuxt auto-import 会自动导入 composables 和 utils 中的导出，页面里�
   - 需要在 `nuxt.config.ts` 的 `app.head.link` 中显式引入 `icon` 和 `manifest.json`，这是部分浏览器判定 PWA 的强制门槛。
 - **单例模式**：为了防止桌面快捷方式被多次点击打开多个窗口，需在 `pwa.manifest` 中配置 `launch_handler: { client_mode: 'focus-existing' }`。
 - **构建测试**：PWA 的 Service Worker 只有在 `npm run generate` 生成的静态产物中才会生效。测试时必须使用 `npx serve .output/public` 并在浏览器中验证安装按钮。
+
+## Tauri 桌面端
+
+- 工程位于 `src-tauri/`，`tauri.conf.json` 的 `frontendDist` 指向 `../.output/public`，`beforeBuildCommand` 为 `npm run generate`，即桌面端复用同一份静态产物。
+- 前端改动不需要动 Rust 侧，`src-tauri/src/` 目前只有默认启动壳，没有注册自定义命令。
+- `npm run tauri dev` 依赖 `devUrl` 指向的 `http://localhost:3000`，跑之前先确认 `npm run dev` 可用。
+- `security.csp` 当前为 `null`，若后续引入外部资源或远程接口，需要自行收紧 CSP。
 
 ## 质量要求
 

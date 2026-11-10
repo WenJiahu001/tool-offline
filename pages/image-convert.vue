@@ -215,9 +215,6 @@ useShortcuts([])
     <ToolPageHeader
       title="图片格式转换"
       description="支持 PNG、JPG、WebP 格式互转，批量处理，纯本地运行。"
-      icon="refresh-cw"
-      icon-bg="bg-indigo-50"
-      icon-color="text-indigo-600"
     />
     <ToolFeedback
       :error="errorMessage"

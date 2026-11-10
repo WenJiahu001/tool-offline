@@ -1,5 +1,5 @@
 {
-  "name": "image-compressor",
+  "name": "local-tools",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,7 +9,8 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "typecheck": "nuxt typecheck",
-    "test": "node node_modules/jiti/lib/jiti-cli.mjs tests/run-tests.ts"
+    "test": "node node_modules/jiti/lib/jiti-cli.mjs tests/run-tests.ts",
+    "tauri": "tauri"
   },
   "dependencies": {
     "@nuxtjs/tailwindcss": "^6.12.0",

@@ -2,6 +2,8 @@
 const isProd = process.env.NODE_ENV === 'production'
 
 export default defineNuxtConfig({
+    ssr: false,
+
     modules: ['@nuxtjs/tailwindcss', '@vueuse/nuxt', '@vite-pwa/nuxt'],
 
     pwa: {

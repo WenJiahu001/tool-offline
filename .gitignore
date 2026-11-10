@@ -10,3 +10,6 @@ dist
 .nitro.env
 .agent
 .idea/
+
+# WorkBuddy 项目数据
+.workbuddy/

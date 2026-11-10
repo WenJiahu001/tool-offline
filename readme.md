@@ -6,7 +6,8 @@ LocalTools 是一个基于 Nuxt 3 + Tailwind CSS 构建的纯前端本地工具�
 
 - 纯前端运行：文件在浏览器本地处理，无需后端服务
 - 隐私友好：图片、PDF、文本等内容不会上传服务器
-- 即开即用：支持本地开发、静态生成和部署
+- 重计算不卡界面：JSON 解析对比、Markdown 渲染、PDF 合并均放在 Web Worker 中执行
+- 即开即用：支持本地开发、静态部署、PWA 离线安装和 Tauri 桌面打包
 - 中文界面：工具入口、操作说明和反馈信息面向中文用户
 - 工具集中：覆盖图片处理、PDF 处理、开发辅助和日常实用场景
 
@@ -23,11 +24,18 @@ LocalTools 是一个基于 Nuxt 3 + Tailwind CSS 构建的纯前端本地工具�
 | 开发工具 | JSON 工具 | JSON 格式化、压缩、转义、智能纠错和差异对比 |
 | 开发工具 | URL 编解码 | URL 编码、解码和查询参数解析 |
 | 开发工具 | Markdown 编辑器 | 实时预览、代码高亮，支持导入导出 Markdown/HTML |
+| 开发工具 | Base64 编解码 | 文本与文件的 Base64 互转，中文不乱码 |
+| 开发工具 | JWT 解析器 | 解析 Header/Payload、展示签名、计算过期时间 |
+| 开发工具 | 时间戳转换 | Unix 时间戳与本地时间双向转换，支持毫秒与快捷偏移 |
+| 开发工具 | Cron 表达式助手 | 可视化配置、中文语义解析和未来执行时间预测 |
+| 开发工具 | SQL 格式化 | 多方言格式化、美化与一键压缩 |
+| 开发工具 | 纯文本对比 | 两段文本或代码的行级差异对比，支持虚拟滚动 |
+| 开发工具 | 数据格式转换 | JSON、YAML、Properties 三者互转，支持嵌套打平 |
 | 实用工具 | 二维码生成器 | 根据文字或链接生成二维码，并支持样式调整 |
 
 ## 技术栈
 
-- [Nuxt 3](https://nuxt.com/)：Vue 应用框架
+- [Nuxt 3](https://nuxt.com/)：Vue 应用框架，SPA 模式（`ssr: false`）
 - [Vue 3](https://vuejs.org/)：Composition API
 - [Tailwind CSS](https://tailwindcss.com/)：原子化样式
 - [pdf-lib](https://pdf-lib.js.org/)：PDF 创建与合并
@@ -36,6 +44,12 @@ LocalTools 是一个基于 Nuxt 3 + Tailwind CSS 构建的纯前端本地工具�
 - [exifr](https://github.com/MikeKovarik/exifr)：EXIF 解析
 - [marked](https://marked.js.org/) + [highlight.js](https://highlightjs.org/)：Markdown 渲染和代码高亮
 - [qrcode](https://github.com/soldair/node-qrcode)：二维码生成
+- [diff](https://github.com/kpdecker/jsdiff)：文本差异对比
+- [jsonrepair](https://github.com/josdejong/jsonrepair)：JSON 智能纠错
+- [yaml](https://github.com/eemeli/yaml)：YAML 解析与生成
+- [sql-formatter](https://github.com/sql-formatter-org/sql-formatter)：SQL 格式化
+- [cronstrue](https://github.com/bradymholt/cronstrue) + [cron-parser](https://github.com/HarrisonQi/node-cron-parser)：Cron 语义化与执行时间预测
+- [@vueuse/core](https://vueuse.org/)：组合式工具函数与虚拟列表
 - [lucide-vue-next](https://lucide.dev/)：图标
 
 ## 本地运行
@@ -56,12 +70,13 @@ http://localhost:3000
 ## 常用命令
 
 ```bash
-npm run dev      # 启动开发服务器
-npm run build    # 构建生产版本
-npm run generate # 生成静态站点
-npm run preview  # 预览构建产物
+npm run dev       # 启动开发服务器
+npm run build     # 构建生产版本
+npm run generate  # 生成静态站点
+npm run preview   # 预览构建产物
 npm run typecheck # TypeScript 类型检查
-npm test         # 运行基础测试
+npm test          # 运行基础测试
+npm run tauri     # 调用 Tauri CLI（桌面端）
 ```
 
 ## 项目结构
@@ -69,18 +84,41 @@ npm test         # 运行基础测试
 ```text
 .
 ├── components/        # 通用组件
-├── composables/       # 组合式函数与工具列表
+├── composables/       # 组合式函数、Worker 封装与工具列表
 ├── layouts/           # 页面布局
 ├── pages/             # Nuxt 文件路由页面
+├── public/            # 静态资源与 PWA 图标
+├── src-tauri/         # Tauri 桌面端工程
 ├── tests/             # 基础测试脚本
 ├── utils/             # 文件、JSON、Markdown 等工具函数
+├── workers/           # JSON / Markdown / PDF 的 Web Worker
 ├── app.vue            # 应用入口
 ├── nuxt.config.ts     # Nuxt 配置
 └── package.json       # 项目脚本与依赖
 ```
 
+## 发布方式
+
+### 静态站点与 PWA
+
+```bash
+npm run generate
+npx serve .output/public
+```
+
+Service Worker 只在 `generate` 产物中生效，需要通过 HTTP 访问才能验证离线安装。清单文件固定为 `manifest.json`，图标尺寸必须与声明一致，否则部分浏览器会拒绝安装。
+
+### 桌面端（Tauri）
+
+```bash
+npm run tauri dev     # 开发预览
+npm run tauri build   # 打包桌面安装包
+```
+
+Tauri 读取 `.output/public` 作为前端产物，构建前会自动执行 `npm run generate`。
+
 ## 隐私说明
 
-LocalTools 的核心设计目标是让文件处理尽可能留在本地浏览器中完成。图片压缩、图片裁剪、EXIF 读取与清除、PDF 合并、图片转 PDF、JSON 处理、URL 编解码、Markdown 预览和二维码生成等操作均不依赖文件上传接口。
+LocalTools 的核心设计目标是让文件处理尽可能留在本地浏览器中完成。图片压缩、图片裁剪、EXIF 读取与清除、PDF 合并、图片转 PDF，以及 Base64、JWT、JSON、URL、Markdown、Cron、SQL 处理与二维码生成等操作均不依赖文件上传接口。
 
 如果你自行修改项目并引入远程 API、统计脚本或第三方上传服务，请在发布前重新审查隐私说明。

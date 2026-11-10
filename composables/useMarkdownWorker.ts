@@ -19,6 +19,11 @@ export const useMarkdownWorker = () => {
         callbacks.delete(id)
       }
     }
+    worker.onerror = (e) => {
+      const err = new Error(e.message || 'Worker 运行异常')
+      callbacks.forEach(cb => cb.reject(err))
+      callbacks.clear()
+    }
   }
 
   const renderMarkdown = async (content: string) => {

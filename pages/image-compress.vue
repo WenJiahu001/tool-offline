@@ -170,9 +170,6 @@ useShortcuts([])
     <ToolPageHeader
       title="图片压缩工具"
       description="高效压缩 PNG/JPG 图片，智能平衡画质与体积。"
-      icon="image"
-      icon-bg="bg-blue-50"
-      icon-color="text-blue-600"
     />
     <ToolFeedback
       :error="errorMessage"

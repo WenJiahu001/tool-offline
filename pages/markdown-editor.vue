@@ -224,9 +224,6 @@ const { isMac, shortcuts, showShortcutHelp } = useShortcuts([
     <ToolPageHeader
       title="Markdown 编辑器"
       description="编辑 Markdown 内容，实时预览渲染效果，支持代码高亮。"
-      icon="file-text"
-      icon-bg="bg-indigo-50"
-      icon-color="text-indigo-600"
     />
 
     <!-- 工具栏 -->

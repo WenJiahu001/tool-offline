@@ -112,9 +112,6 @@ useShortcuts([])
     <ToolPageHeader
       title="图片合并为 PDF"
       description="将多张图片按顺序合并为一个 PDF 文档。"
-      icon="file-up"
-      icon-bg="bg-indigo-50"
-      icon-color="text-indigo-600"
     />
     <ToolFeedback
       :error="errorMessage"

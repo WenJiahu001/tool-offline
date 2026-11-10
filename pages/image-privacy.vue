@@ -254,9 +254,6 @@ useShortcuts([])
     <ToolPageHeader
       title="图片隐私信息清除"
       description="上传图片查看隐私信息，一键清除后安全下载。"
-      icon="shield"
-      icon-bg="bg-rose-50"
-      icon-color="text-rose-600"
     />
     <ToolFeedback
       :error="errorMessage"
@@ -464,7 +461,3 @@ useShortcuts([])
     </div>
   </div>
 </template>
-
-<style scoped>
-/* 可以在这里添加微调样式 */
-</style>

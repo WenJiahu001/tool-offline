@@ -3,9 +3,6 @@
     <ToolPageHeader
       title="图片裁剪工具"
       description="支持自定义尺寸和常用证件照尺寸裁剪，简单好用。"
-      icon="crop"
-      icon-bg="bg-blue-50"
-      icon-color="text-blue-600"
     />
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -443,9 +440,11 @@ const downloadImage = () => {
   })
 }
 
+useSeoMeta({
+  title: '图片裁剪工具 - 在线证件照裁剪与自定义尺寸裁图 - LocalTools',
+  description: '支持一寸、二寸等常用证件照尺寸和自定义像素裁剪，浏览器本地处理，图片不上传服务器。',
+  keywords: '图片裁剪, 证件照裁剪, 在线裁剪图片, 一寸照片, 自定义尺寸裁剪, 本地图片工具'
+})
+
 useShortcuts([])
 </script>
-
-<style scoped>
-/* 可以在这里覆盖 vue-cropper 的样式 */
-</style>

@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict'
+import { readdirSync } from 'node:fs'
+import { join } from 'node:path'
 
 import { tools } from '../composables/useTools'
 import { formatFileSize } from '../utils/file'
@@ -73,6 +75,16 @@ const run = () => {
 
   const routeSet = new Set(tools.map(tool => tool.route))
   assert.equal(routeSet.size, tools.length)
+
+  // 页面文件与工具元数据双向对齐：新增/删除工具时两侧必须同步
+  const pageRoutes = readdirSync(join(process.cwd(), 'pages'))
+    .filter(file => file.endsWith('.vue') && file !== 'index.vue')
+    .map(file => `/${file.replace(/\.vue$/, '')}`)
+  assert.deepEqual(
+    pageRoutes.sort(),
+    [...routeSet].sort(),
+    'pages 目录与 tools 元数据不一致',
+  )
 
   // Cron 表达式测试
   const parsedCron = cronstrue.toString('*/5 * * * *', { locale: 'zh_CN' })
